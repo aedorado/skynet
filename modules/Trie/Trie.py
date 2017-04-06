@@ -124,6 +124,8 @@ def main() :
 	argv = sys.argv
 	file = argv[1]
 
+	print "testng"
+	
 	fHandle = open(file, "r")
 	data = fHandle.read()
 	fHandle.close()
