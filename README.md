@@ -8,12 +8,14 @@
 
 Layer | Description
 ------------ | -------------
-Layer 1 | Master Server
+Layer 1 | Master Servers
 Layer 2 | Peer Servers (servers in this layer have peer to peer connections)
 Layer 3 | Clients (connected to servers in layer 2)
 
 ![Network Structure](https://github.com/Pratyush380/skynet/blob/master/project_network.jpg)
 The modules for the nodes of all three layers are constructed using Python. 
+
+The master servers are like SuperPeers in a hybrid peer network. Whenever a new server with enough resources (processing, memory) intends to join the network it is added to Layer 2 where it establishes a connection with the master server and a peer in layer 2. Servers from layer 2 maybe promoted to a SuperPeer in layer 1 if they have sufficient free bandwidth and processing power.
 
 ###### Files Storage and Search
 
