@@ -91,6 +91,7 @@ class DB:
             pass
 
 def main():
+    print "testing ..."
     db = DB('skynet', 'CLIENT_DATA')
     db.insert([{
             "master_id" : "m1_mac",
