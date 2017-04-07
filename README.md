@@ -15,9 +15,17 @@ Layer 3 | Clients (connected to servers in layer 2)
 ![Network Structure](https://github.com/Pratyush380/skynet/blob/master/project_network.jpg)
 The modules for the nodes of all three layers are constructed using Python. 
 
-The master servers are like SuperPeers in a hybrid peer network. Whenever a new server with enough resources (processing, memory) intends to join the network it is added to Layer 2 where it establishes a connection with the master server and a peer in layer 2. Servers from layer 2 maybe promoted to a SuperPeer in layer 1 if they have sufficient free bandwidth and processing power.
+###### Adding nodes
 
-###### Files Storage and Search
+The master server(s) is/are like SuperPeer(s) in a hybrid peer network. Whenever a new server with enough resources (processing power, memory) intends to join the network it is added to Layer 2 where it establishes a connection with the master server (if already present) or designates itself as the master server (If no master server is present).
+
+A incoming server also connects with a peer server in layer 2 (if present) apart from the master server. Servers from layer 2 maybe promoted to a SuperPeer in layer 1 if they have sufficient free bandwidth and processing power.
+
+Incoming clients are added to layer 3 where they connect with a server in layer 2 assigned to them by the master server(s) in layer 1. The server a incoming client connects to is decided on the basis of PASTRY protocol, where the server with nearest index value (to the client index value) is assigned.
+
+###### File upload and download
+
+###### Files name Storage and Search
 
 File names (when a new file is uploaded) are stored at the master server using the Trie data structure - an ordered tree data structure that is used to store a dynamic set or associative array where the keys are usually strings. 
 
