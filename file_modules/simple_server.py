@@ -12,5 +12,5 @@ authorizer = DummyAuthorizer()
 authorizer.add_anonymous(home_dir + "/skynet_files", perm='elradfmwM')
 handler = FTPHandler
 handler.authorizer = authorizer
-server = FTPServer(("127.0.0.1", 2121), handler)
+server = FTPServer(("", 2121), handler)
 server.serve_forever()

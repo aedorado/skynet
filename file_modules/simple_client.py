@@ -6,7 +6,7 @@ from ftplib import FTP
 # # s.connect(("172.17.23.5", 8888))
 
 ftp = FTP()
-ftp.connect("localhost", 2121)
+ftp.connect("172.19.17.181", 2121)
 print (ftp.getwelcome())
 ftp.login()
 
