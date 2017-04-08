@@ -19,15 +19,19 @@ The modules for the nodes of all three layers are constructed using Python.
 
 The master server(s) is/are like SuperPeer(s) in a hybrid peer network. Whenever a new server with enough resources (processing power, memory) intends to join the network it is added to Layer 2 where it establishes a connection with the master server (if already present) or designates itself as the master server (If no master server is present).
 
-A incoming server also connects with a peer server in layer 2 (if present) apart from the master server. Servers from layer 2 maybe promoted to a SuperPeer in layer 1 if they have sufficient free bandwidth and processing power.
+A incoming server also connects with a peer server in layer 2 (if present) apart from the master server. The new servers create a hash table to establish a virtual connection with servers in layer two. Virtual connections - new nodes have topology information of layer 2.
 
-Incoming clients are added to layer 3 where they connect with a server in layer 2 assigned to them by the master server(s) in layer 1. The server a incoming client connects to is decided on the basis of PASTRY protocol, where the server with nearest index value (to the client index value) is assigned to the client (by the master server(s)).
+If the master(s) is/are overloaded, servers from layer 2 maybe promoted to a be a master in layer 1 if they have sufficient free bandwidth and processing power.
 
-###### File upload and download
+Incoming clients are added to layer 3 where they connect with a server in layer 2 assigned to them by the master server(s) in layer 1. The server a incoming client connects to is decided on the basis of load, where the server with minimum load is provided to the client (by the master server(s)).
+
+###### File upload
+
+When a client uploads a file it is stored using the pastry protocol - at the server with hash index value closest to the file hash. The files location information is stored at the intermidiate server. The intermidiate server has a query based map of the files (to speed up retrieval).
 
 ###### File name Storage and Search
 
-File names (when a new file is uploaded) are stored at the master server directory using the Trie data structure - an ordered tree data structure that is used to store a dynamic set or associative array where the keys are usually strings. 
+File names (when a new file is uploaded) are stored at the master server using the Trie data structure - an ordered tree data structure that is used to store a dynamic set or associative array where the keys are usually strings. 
 
 The principle advantage of using trie (over a binary search tree/hash table) is that:
 
@@ -40,7 +44,17 @@ This improves search speed. All filenames containing a particular search query c
 
 ![A trie](https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Trie_example.svg/250px-Trie_example.svg.png)
 
-###### File Storage and retrieval
+###### File retrieval
+
+When a query is made by a client it is forwarded to the master server through the intermidiate server. The master server then returns the list of available filenames to the intermidiate server to forward to the client. The client now selects the file it intends to retrieve. The intermidiate server now determines the peer server the desired file is stored at using the distributed hash table and provides the address to the client. The client now establishes a direct connection with the said server and retrieves the file.
+
+***the intermidiate server uses a distributed hash table (query based map) to store location of uploaded files and to speed up retrieval***  (Caching of enteries at multiple nodes for performance)
+
+###### Going forward
+
+1. Security
+2. Chunking of files
+3. Distributed Trie tree
 
 
 ###### Progress
@@ -48,8 +62,9 @@ This improves search speed. All filenames containing a particular search query c
 - [x] Network modules constructed (master, server, client) and tested.
 - [x] File upload and download tested.
 - [x] Trie module implemented. 
+- [x] Single point database
 - [ ] Master election from layer 2
 - [ ] Pastry protocol implementation
-- [ ] Caching of enteries at multiple nodes for performance
-- [ ] Incentives/penalties to foster collaboration 
+- [ ] Caching of enteries at multiple nodes for performance (DHT implementation)
+- [ ] Incentives/penalties to foster collaboration (Increased bandwidth allocation to clients providing maximum uploads)
 
