@@ -35,7 +35,7 @@ class FileServer:
             self.server.close_all()
             self.server_proc.terminate()
             self.server_proc.join()
-            print ("server stopped")
+            print ("FTP server stopped")
             del self.server_proc
             self.server_proc = None 
             self.is_running = False 

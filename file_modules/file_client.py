@@ -15,7 +15,7 @@ upload_address = client.recv(1024)
 print 'Upload Location : ' + upload_address
 
 ftp = FTP()
-ftp.connect("172.19.17.181", 2121)
+ftp.connect(upload_address, 2121)
 ftp.login()
 fh = open("/home/dorado/Downloads/1.mp4", 'rb')
 ftp.storbinary('STOR ww.mp4', fh)
