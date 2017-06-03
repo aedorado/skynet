@@ -87,7 +87,7 @@ class Client :
 		
 		self.HOST = ['']   		 # This contains all the host that are active now ... the method is needed to be known here
 		self.MASTER_PORT = 10639 # All servers will listen on this port
-		self.SERVER_PORT = 9105
+		self.SERVER_PORT = 9167
 		self.SERVER_HOST = ''  	 # this is to be provided by the Master ..  based on load and hop count (proximity to client)	  
 
 
@@ -214,7 +214,8 @@ class Client :
 				print data
 				break
 		
-		#dummy code ends
+
+		
 
 		sock_conn_master.close()
 
@@ -288,7 +289,7 @@ class Client :
 
 			try :
 				data = sock_conn_server.recv(4096)
-				print data
+				print data + 'pppppppppppppppppp'
 			except  :
 				print 'Recv Failed server' + message
 				#sys.exit()
@@ -296,7 +297,66 @@ class Client :
 				print data
 				break
 		
+
 		#dummy code ends
+		
+		message = "14:Request_ftp_port:"
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_server.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				break
+
+
+		print 'Message send successfully to server' + message
+
+		while True :
+			try :
+				data = sock_conn_server.recv(4096)
+				print data + "kkppp"
+			except  :
+				print 'Recv Failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				print data
+				break
+		
+		message = "16:Close_ftp_port:"
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_server.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				break
+
+
+		print 'Message send successfully to server' + message
+
+		while True :
+			try :
+				data = sock_conn_server.recv(4096)
+				print data + "kkkkk"
+			except  :
+				print 'Recv Failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				print data
+				break
+		#dummy code ends
+
 		sock_conn_server.close()
 
 
