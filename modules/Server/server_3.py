@@ -21,7 +21,7 @@ ip = ni.ifaddresses('eth0')[2][0]['addr']
 
 BUFFER = 4096
 
-def client_thread(conn, self_obj):
+def client_thread(conn):
 	global BUFFER
 	#Sending message to connected client
 	#conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
@@ -63,7 +63,7 @@ def client_thread(conn, self_obj):
 			elif data[:3] == '15:' :
 				#Threaded implementation of file upload
 				print 'Threaded implementation of file upload'
-				message = '8:ACK:' + str(self_obj.HOST)
+				message = '8:ACK:' + str("none")
 				while  True:
 					try :
 						#Set the whole string
@@ -133,8 +133,8 @@ class Server :
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
-		self.PORT = 8995 # All servers will listen on this port -- to listen to CLIENTS
-		self.PEER_PORT = 9565  # to listen to PEERS
+		self.PORT = 9105 # All servers will listen on this port -- to listen to CLIENTS
+		self.PEER_PORT = 9570 # to listen to PEERS
 
 
 		self.ip = ni.ifaddresses('wlp3s0')[2][0]['addr']
@@ -152,10 +152,10 @@ class Server :
 		fHandle.close()
 		data = data.strip()
 
-		if data == '0' :
+		if data == '0' :    # becoming mster
 			print "Initiating master"
-			master_node = master.Master()   #dine
-		else :
+			#master_node = master.Master()   #dine
+		else :   # connecting to master
 			# as the master writes to this file ... i.e. the database that it is the server
 			# but for this file the master will put its ip address .... and read can be done simulaneously..
 			# when we generalise the server has to register to all of the servers live at that time 
@@ -163,18 +163,20 @@ class Server :
 			# reglar tier 2 server
 			
 			#self.register_to_master(data)
-			try:
+			'''try:
 				Thread(target=self.register_to_master, args=(data,)).start()
 			except Exception, errtxt:
-				print errtxt
+				print errtxt'''
 
 		print 'outside'
 
 		
-		'''try:
-			Thread(target=self.bind_and_serve, args=()).start()
-		except Exception, errtxt:
-			print errtxt'''	
+		# try:
+		# 	Thread(target=self.bind_and_serve, args=()).start()
+		# except Exception, errtxt:
+		# 	print errtxt	
+		self.bind_and_serve()
+		print 'Super Outside'
 		
 
 
@@ -312,32 +314,35 @@ class Server :
 
 		#start_new_thread(peer_thread_accept, ())
 
-		try:
+		'''try:
 			Thread(target=self.peer_thread_accept, args=()).start()
 		except Exception, errtxt:
-			print errtxt
+			print errtxt'''
 
 		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
 
 		while True :
 			#Bind socket to local host and port
 			try:
+				print 'BINDING .......... SERVER PORT'
 				self.socket_obj['s'].bind((self.HOST, self.PORT))
-				self.socket_obj['s'].listen(10)
+				#self.socket_obj['s'].listen(10)
+				#print "inside server"
 			except socket.error as msg:
-				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+				print 'Bind failed in bind_and_serve. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
 				continue
 			finally :
 				break
-		
+		self.socket_obj['s'].listen(10)
 		while True:
 			#wait to accept a connection - blocking call
-			print 'waiting at accept of client'
+			#print 'waiting at accept of client'
+			#print self.socket_obj['s']
 			conn, addr = self.socket_obj['s'].accept()
 			print 'Connected with ' + addr[0] + ':' + str(addr[1])
 			 
 			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-			start_new_thread(client_thread ,(conn, self,))
+			start_new_thread(client_thread ,(conn,))
 
 
 def main() :

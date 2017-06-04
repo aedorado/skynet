@@ -5,6 +5,9 @@ from random import randint
 from thread import *
 from threading import Thread
 
+''' run :: echo '0' > master_stub.txt | python server_6_trie_update.py 11517 11817 10732
+'''
+
 def slave_thread(bundle):
 	conn = bundle[0]
 	self = bundle[1]
@@ -77,7 +80,7 @@ def slave_thread(bundle):
 #master listens at 10560
 
 class Client :
-	def __init__(self) :
+	def __init__(self, server_port, master_port) :
 		#socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		# We should use a DNS to query for the host address and host port
 		self.OWN_PORT = 12967    # the client should listen on this port
@@ -86,8 +89,8 @@ class Client :
 		#create id of server using the hash of IP address and MAC
 		
 		self.HOST = ['']   		 # This contains all the host that are active now ... the method is needed to be known here
-		self.MASTER_PORT = 10639 # All servers will listen on this port
-		self.SERVER_PORT = 9105
+		self.MASTER_PORT = int(master_port) # All servers will listen on this port
+		self.SERVER_PORT = int(server_port)
 		self.SERVER_HOST = ''  	 # this is to be provided by the Master ..  based on load and hop count (proximity to client)	  
 
 
@@ -120,6 +123,7 @@ class Client :
 		try :
 			# new connection to master
 			t = Thread(target=self.connect_to_server, args=())
+			#t = Thread(target=self.connect_to_master, args=())
 			#print t
 			threads += [t]
 			t.start()
@@ -165,33 +169,56 @@ class Client :
 		# connect to remote host
 		try :
 			#sock_conn_master.connect((self.HOST[0], self.MASTER_PORT))
-			sock_conn_master.connect(("172.19.17.181", self.MASTER_PORT))
+			sock_conn_master.connect(("172.19.17.183", self.MASTER_PORT))
 		except :
 			print 'Unable to connect'
 			#sys.exit()
 
-		message = '5:request_ip'
-		print message
+		# message = '5:request_ip'
+		# print message
 
-		try :
-			#Set the whole string
-			sock_conn_master.sendall(message)
-		except socket.error:
-			#Send failed
-			print 'Send failed'
-			#sys.exit()
+		# try :
+		# 	#Set the whole string
+		# 	sock_conn_master.sendall(message)
+		# except socket.error:
+		# 	#Send failed
+		# 	print 'Send failed'
+		# 	#sys.exit()
 
-		print 'Message send successfully to master ........ YES'
+		# print 'Message send successfully to master ........ YES'
 
-		try :
-			data = sock_conn_master.recv(4096)
-			print data
-		except  :
-			print 'Sent Failed'
-			#sys.exit()
+		# try :
+		# 	data = sock_conn_master.recv(4096)
+		# 	print data
+		# except  :
+		# 	print 'Sent Failed'
+		# 	#sys.exit()
 
-		#dummy code to upload to server
-		message = "10:upload"
+		# #dummy code to upload to server
+		# message = "10:upload"
+		# while True :
+		# 	try :
+		# 		#Set the whole string
+		# 		sock_conn_master.sendall(message)
+		# 	except socket.error:
+		# 		#Send failed
+		# 		print 'Send failed server' + message
+		# 		#sys.exit()
+
+
+		# 	print 'Message send successfully to server' + message
+
+		# 	try :
+		# 		data = sock_conn_master.recv(4096)
+		# 		print data + "kk"
+		# 	except  :
+		# 		print 'Recv Failed server' + message
+		# 		#sys.exit()
+		# 	finally :
+		# 		print data
+		# 		break
+		
+		message = '18:up:new_client432<IP>172.19.17.188'
 		while True :
 			try :
 				#Set the whole string
@@ -214,7 +241,116 @@ class Client :
 				print data
 				break
 		
-		#dummy code ends
+
+		sock_conn_master.close()
+
+		sock_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		try :
+			#sock_conn_master.connect((self.HOST[0], self.MASTER_PORT))
+			sock_conn_master.connect(("172.19.17.183", self.MASTER_PORT))
+		except :
+			print 'Unable to connect'
+			#sys.exit()
+
+		message = '18:up:new_client432.py<IP>172.19.17.188'
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_master.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				#sys.exit()
+
+
+			print 'Message send successfully to server' + message
+
+			try :
+				data = sock_conn_master.recv(4096)
+				print "recieve query"
+				print data 
+			except  :
+				print 'Recv Failed server' + message
+				#sys.exit()
+			finally :
+				print data
+				break
+		
+
+		sock_conn_master.close()
+
+		sock_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		try :
+			#sock_conn_master.connect((self.HOST[0], self.MASTER_PORT))
+			sock_conn_master.connect(("172.19.17.183", self.MASTER_PORT))
+		except :
+			print 'Unable to connect'
+			#sys.exit()
+
+		message = '20:search:new_client432'
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_master.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				#sys.exit()
+
+
+			print 'Message send successfully to server' + message
+
+			try :
+				data = sock_conn_master.recv(4096)
+				print "recieve query"
+				print data 
+			except  :
+				print 'Recv Failed server' + message
+				#sys.exit()
+			finally :
+				print data
+				break
+		
+
+		sock_conn_master.close()
+
+
+		sock_conn_master.close()
+		sock_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		try :
+			#sock_conn_master.connect((self.HOST[0], self.MASTER_PORT))
+			sock_conn_master.connect(("172.19.17.183", self.MASTER_PORT))
+		except :
+			print 'Unable to connect'
+			#sys.exit()
+
+		message = '20:search:new_client432.py'
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_master.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				#sys.exit()
+
+
+			print 'Message send successfully to server' + message
+
+			try :
+				data = sock_conn_master.recv(4096)
+				print "recieve query"
+				print data 
+			except  :
+				print 'Recv Failed server' + message
+				#sys.exit()
+			finally :
+				print data
+				break
+		
 
 		sock_conn_master.close()
 
@@ -231,6 +367,8 @@ class Client :
 
 	def connect_to_server(self):
 		#connected = self.connect_to_master()
+
+		print "------------YES HERE----------"
 		data = ""
 		message = "7:conc:"+str(self.ip)
 		print 'Inside connect to server'
@@ -238,7 +376,7 @@ class Client :
 		
 		sock_conn_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-		self.DEST_SERVER_IP = ""
+		self.DEST_SERVER_IP = self.ip
 		# connect to remote host
 		try :
 			print self.DEST_SERVER_IP + "DUMMY"
@@ -288,7 +426,7 @@ class Client :
 
 			try :
 				data = sock_conn_server.recv(4096)
-				print data
+				print data + 'pppppppppppppppppp'
 			except  :
 				print 'Recv Failed server' + message
 				#sys.exit()
@@ -296,8 +434,69 @@ class Client :
 				print data
 				break
 		
+
 		#dummy code ends
+		
+		message = "14:Request_ftp_port:"
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_server.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				break
+
+
+		print 'Message send successfully to server' + message
+
+		while True :
+			try :
+				data = sock_conn_server.recv(4096)
+				print data + "kkppp"
+			except  :
+				print 'Recv Failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				print data
+				break
+		
+		message = "16:Close_ftp_port:mycroft"
+		while True :
+			try :
+				#Set the whole string
+				sock_conn_server.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				break
+
+
+		print 'Message send successfully to server' + message
+
+		while True :
+			try :
+				data = sock_conn_server.recv(4096)
+				print data + "kkkkk"
+			except  :
+				print 'Recv Failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				print data
+				break
+		#dummy code ends
+
 		sock_conn_server.close()
+
+		self.connect_to_master()
 
 
 
@@ -332,7 +531,7 @@ class Client :
 
 
 def main() :
-	client_obj = Client()
+	client_obj = Client(sys.argv[1], sys.argv[2])
 	#master_obj.bind_and_serve()
 	
 

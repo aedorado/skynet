@@ -5,6 +5,9 @@ import time
 import master
 from thread import *
 from threading import Thread
+import port_mapper
+import FileServer
+
 '''
 Find self ip - import os
 f = os.popen('ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1')
@@ -21,8 +24,13 @@ ip = ni.ifaddresses('eth0')[2][0]['addr']
 
 BUFFER = 4096
 
-def client_thread(conn, self_obj):
+def client_thread(buff):
 	global BUFFER
+
+	conn = buff[0]
+	self = buff[1]
+	used_port = 0
+	file_server = ""
 	#Sending message to connected client
 	#conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
 	
@@ -40,6 +48,7 @@ def client_thread(conn, self_obj):
 			data = conn.recv(BUFFER)
 			print data[:-1] + 'k'
 			reply = 'OK...' + data
+			print used_port
 
 
 			# '7:' prefix for connection ... corresponding reply
@@ -60,10 +69,15 @@ def client_thread(conn, self_obj):
 						continue
 					finally :
 						break
-			elif data[:3] == '15:' :
+			elif data[:3] == '14:' :
 				#Threaded implementation of file upload
 				print 'Threaded implementation of file upload'
-				message = '8:ACK:' + str(self_obj.HOST)
+				used_port = self.PORT_Mapper.get_port()
+				self.PORT_Mapper.use_port(used_port)
+				message = '15:port:' + str(used_port)
+				file_server = FileServer.FileServer(used_port)
+				file_server.setSharedDirectory('/home/arnab/skynet_files')
+				file_server.startServer()
 				while  True:
 					try :
 						#Set the whole string
@@ -74,6 +88,24 @@ def client_thread(conn, self_obj):
 						continue
 					finally :
 						break
+						#break
+			elif data[:3] == '16:' :
+				#Threaded implementation of file upload
+				print 'Threaded implementation of file upload'
+				self.PORT_Mapper.free_port(used_port)
+				message = '17:ACK:' + str("none")
+				file_server.stopServer()
+				while  True:
+					try :
+						#Set the whole string
+						conn.sendall(message)
+					except socket.error:
+						#Send failed
+						print 'Send failed and retrying'
+						continue
+					finally :
+						conn.close()
+						break
 			elif data[:3] == '10:' :
 				#Threaded implementation of file upload
 				print 'Threaded implementation of file upload'
@@ -81,7 +113,7 @@ def client_thread(conn, self_obj):
 				print 'connection closed' 
 				conn.close()
 				break
-			conn.sendall(reply)
+			#conn.sendall(reply)
 	except :
 		conn.close()
 	finally :
@@ -111,7 +143,25 @@ def peer_thread(conn):
 			data = conn.recv(BUFFER)
 			print data[:-1]
 			reply = 'OK...' + data
-			if data[:-1] == 'exit':
+
+			if data[:3] == '16:' :
+				#Threaded implementation of file upload
+				print 'Threaded implementation of file upload'
+				self.PORT_Mapper.free_port(used_port)
+				message = '17:ACK:' + str("none")
+				file_server.stopServer()
+				while  True:
+					try :
+						#Set the whole string
+						conn.sendall(message)
+					except socket.error:
+						#Send failed
+						print 'Send failed and retrying'
+						continue
+					finally :
+						conn.close()
+						break
+			elif data[:-1] == 'exit':
 				print 'connection closed' 
 				conn.close()
 				break
@@ -133,9 +183,9 @@ class Server :
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
-		self.PORT = 8995 # All servers will listen on this port -- to listen to CLIENTS
-		self.PEER_PORT = 9565  # to listen to PEERS
-
+		self.PORT = 9160 # All servers will listen on this port -- to listen to CLIENTS
+		self.PEER_PORT = 9570 # to listen to PEERS
+		self.PORT_Mapper = port_mapper.PortMap()
 
 		self.ip = ni.ifaddresses('wlp3s0')[2][0]['addr']
 		self.socket_obj = {}
@@ -152,10 +202,10 @@ class Server :
 		fHandle.close()
 		data = data.strip()
 
-		if data == '0' :
+		if data == '0' :    # becoming mster
 			print "Initiating master"
 			master_node = master.Master()   #dine
-		else :
+		else :   # connecting to master
 			# as the master writes to this file ... i.e. the database that it is the server
 			# but for this file the master will put its ip address .... and read can be done simulaneously..
 			# when we generalise the server has to register to all of the servers live at that time 
@@ -163,18 +213,19 @@ class Server :
 			# reglar tier 2 server
 			
 			#self.register_to_master(data)
-			try:
+			'''try: #h this creates a different threaad
 				Thread(target=self.register_to_master, args=(data,)).start()
 			except Exception, errtxt:
-				print errtxt
-
+				print errtxt'''
 		print 'outside'
 
 		
-		'''try:
-			Thread(target=self.bind_and_serve, args=()).start()
-		except Exception, errtxt:
-			print errtxt'''	
+		# try:
+		# 	Thread(target=self.bind_and_serve, args=()).start()
+		# except Exception, errtxt:
+		# 	print errtxt	
+		self.bind_and_serve()
+		print 'Super Outside'
 		
 
 
@@ -251,7 +302,7 @@ class Server :
 
 
 
-	def socket_bind(self) :
+	def socket_bind(self) :    # this effectively cannot be used anywhere
 		#trying to bind
 		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
 		#  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -275,7 +326,7 @@ class Server :
 				break
 			     
 		print 'Socket bind complete and listenning' 
-		return True
+		return True 
 
 
 
@@ -286,16 +337,17 @@ class Server :
 			#Bind socket to local host and port
 			try:
 				self.socket_obj['s_peer'].bind((self.HOST, self.PEER_PORT))
-				self.socket_obj['s_peer'].listen(10)
 			except socket.error as msg:
 				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
 				continue
 			finally :
 				break
 
+		self.socket_obj['s_peer'].listen(10)
+
 		while True:
 			#wait to accept a connection - blocking call
-			print 'waiting on accept of peer_thread'
+			#print 'waiting on accept of peer_thread'
 			conn, addr = self.socket_obj['s_peer'].accept()
 			print 'Connected with ' + addr[0] + ':' + str(addr[1])
 			 
@@ -312,32 +364,36 @@ class Server :
 
 		#start_new_thread(peer_thread_accept, ())
 
-		try:
+		'''try:
 			Thread(target=self.peer_thread_accept, args=()).start()
 		except Exception, errtxt:
-			print errtxt
+			print errtxt'''
 
 		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
 
 		while True :
 			#Bind socket to local host and port
 			try:
+				print 'BINDING .......... SERVER PORT'
 				self.socket_obj['s'].bind((self.HOST, self.PORT))
-				self.socket_obj['s'].listen(10)
+				#self.socket_obj['s'].listen(10)
+				#print "inside server"
 			except socket.error as msg:
-				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+				print 'Bind failed in bind_and_serve. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
 				continue
 			finally :
 				break
-		
+		self.socket_obj['s'].listen(10)
 		while True:
 			#wait to accept a connection - blocking call
-			print 'waiting at accept of client'
+			#print 'waiting at accept of client'
+			#print self.socket_obj['s']
 			conn, addr = self.socket_obj['s'].accept()
 			print 'Connected with ' + addr[0] + ':' + str(addr[1])
 			 
 			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-			start_new_thread(client_thread ,(conn, self,))
+			buff = [conn, self]
+			start_new_thread(client_thread ,(buff,))
 
 
 def main() :

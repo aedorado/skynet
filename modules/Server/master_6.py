@@ -1,9 +1,15 @@
 import math
+import traceback
 import socket, select, string, sys
+sys.path.insert(0, '../Find_IP/')
+sys.path.insert(0, '../Trie/')
 import netifaces as ni
 from random import randint
 from thread import *
 from threading import Thread
+import port_mapper
+import Find_IP
+import Trie
 
 BUFFER = 4096
 
@@ -19,11 +25,14 @@ def slave_thread(bundle):
 	#infinite loop so that function do not terminate and thread do not end.
 	#here should be added a try catch block - to detect lost connecions or failed connections
 	try :
+	#if True :
 		while True:
 			#print conn
 			#Receiving from client
 			data = conn.recv(BUFFER)
 			print data
+			print "kkk"
+			print data[:3]
 			'''
 			try :
 				data = conn.recv(1024)
@@ -67,7 +76,7 @@ def slave_thread(bundle):
 			elif data[:3] == '10:' :  # JUST ......... TO ..... TEST
 				#Threaded implementation of file upload
 				print 'Threaded implementation of file upload'
-				message = '10:ACK:' + str("172.19.17.181")
+				message = '10:ACK:' + str("192.168.1.2")
 				while  True:
 					try :
 						#Set the whole string
@@ -80,6 +89,25 @@ def slave_thread(bundle):
 						#ontinue
 					finally :
 						break
+			elif data[:3] == "18:" :
+				print 'Updating Trie'
+				message = '19:ACK:trie_updated'
+				filename = data[data.rfind(':') + 1:]
+				print message
+				self.Trie_obj.insert(filename) 
+				print "IN MASTER TRIE HANDLER"
+				while  True:
+					try :
+						#Set the whole string
+						conn.sendall(message)
+					except socket.error:
+						#Send failed
+						print 'Send failed and retrying'
+						continue
+					finally :
+						conn.close()
+						break
+				break
 			elif data[:-1] == 'exit':
 				print 'connection closed' 
 				conn.close()
@@ -89,7 +117,7 @@ def slave_thread(bundle):
 				conn.close()
 				break
 			#conn.sendall(reply)
-	except :
+	except  Exception, excep :
 		print 'problem detected'
 		self.CONNECTION[ip_current_server] = 0   # 0 means disconnected  .. this is to be updated onto a database
 		self.tier_two_server_count -= 1
@@ -102,13 +130,13 @@ def slave_thread(bundle):
 #master listens at 10560
 
 class Master :
-	def __init__(self) :
+	def __init__(self, port) :
 		#socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
-		self.PORT = 10646 # All servers will listen on this port
-
+		#self.PORT = 10646 # All servers will listen on this port
+		self.PORT = int(port)
 
 		self.CONNECTION = {'localhost':1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
@@ -118,6 +146,7 @@ class Master :
 		self.last_ip = "None"
 
 		self.socket_objects = []
+		self.Trie_obj = Trie.Trie()
 
 		#bound = self.socket_bind()   #.. there is a definite pattern to accept request
 
@@ -130,10 +159,7 @@ class Master :
 		fHandle.close()
 
 		print "yes.. bind.. retuen"
-		#print self
-
-		#self.serve()
-		#starting new thread to listen
+		
 		try:
 			Thread(target=self.bind_and_serve, args=()).start()
 		except Exception, errtxt:
@@ -142,34 +168,11 @@ class Master :
 		#start_new_thread(self.bind_and_serve, ())
 
 
-	'''
-	def socket_bind(self) :
-		#trying to bind
-		self.socket_objects += [socket.socket(socket.AF_INET, socket.SOCK_STREAM)]
-		print 'Socket created   .... master'
-		
-		while False :
-			#Bind socket to local host and port
-			try:
-				print 'ok'
-				#self.socket_objects[0].bind((self.HOST, self.PORT))
-				#self.socket_objects[0].listen(10)
-				#conn, addr = self.socket_objects[0].accept()
-				#self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
-			except socket.error as msg:
-				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
-				continue
-			finally :
-				break
-				 
-		print 'Socket bind complete and listenning  ....master' 
-		return True
-	'''
-
 
 	def bind_and_serve(self):
 		self.socket_objects += [socket.socket(socket.AF_INET, socket.SOCK_STREAM)]
 		print 'Socket created   .... master'
+		print self.PORT
 
 		while True :
 			#Bind socket to local host and port
@@ -185,6 +188,7 @@ class Master :
 				break
 
 		self.socket_objects[0].listen(10)
+		#print "master established...."
 
 		while True:
 			#wait to accept a connection - blocking call
