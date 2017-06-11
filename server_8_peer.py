@@ -3,6 +3,8 @@ import socket, select, string, sys
 sys.path.insert(0, '../Find_IP/')
 sys.path.insert(0, '../Trie/')
 import netifaces as ni
+import socket                   # Import socket module
+import IP                       # module to calculate system IP
 import time
 import master_8
 from thread import *
@@ -278,7 +280,6 @@ def peer_thread(bundle):
 
 class Server :
 	def __init__(self, server_port, peer_port, master_port) :
-		#socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
@@ -299,17 +300,13 @@ class Server :
 		while True :
 			try :
 				if connection_type == 1 :
-					#print "YYYYYYYYYYEEEEEEEEEEEEEEEESSSSSSSSSSSSSSs"
-					self.ip = ni.ifaddresses('wlp3s0')[2][0]['addr']
-					print self.ip + '::::wlp0000000000000'
+					self.ip = ni.ifaddresses('enp1s0')[2][0]['addr']
 				else :
 					self.ip = ni.ifaddresses('eth0')[2][0]['addr']
-					print self.ip + '::::eth0000000000000'
 				if self.ip == "" :
 					continue				
 			except :
 				self.ip = ni.ifaddresses('eth0')[2][0]['addr']
-				print self.ip + '::::eth0000000000000'
 			finally :
 				break
 
@@ -323,7 +320,7 @@ class Server :
 		if data == '0' :                         # becoming master
 			print "Initiating master"
 			self.master_node = master_8.Master(self.MASTER_PORT)   
-			# self.MASTER_HOST = self.master_node.ip
+
 		else :   # connecting to master
 			# as the master writes to this file ... i.e. the database that it is the server
 			# but for this file the master will put its ip address .... and read can be done simulaneously..
@@ -331,6 +328,10 @@ class Server :
 			# when the server demotes it to a normal server ... it disconnects and this has to be detected my the 
 			# reglar tier 2 server
 			# self.register_to_master(data)
+			self.register_to_persistence()
+
+			exit()
+
 			print data.split(',')[0]
 			self.MASTER_HOST = data.split(',')[0]
 			try: #h this creates a different threaad
@@ -338,6 +339,7 @@ class Server :
 			except Exception, errtxt:
 				print errtxt
 		print 'outside'
+
 
 		
 		# try:
@@ -348,6 +350,20 @@ class Server :
 		print 'Super Outside'
 		
 
+	def register_to_persistence(self):
+		s = socket.socket()             # Create a socket object
+		host = '172.17.23.17'
+		port = 11112                  # Reserve a port for your service.
+
+		s.connect((host, port))
+
+		message = " 1:JOIN server 1:738488"  # message format to join
+		#message = raw_input()              # get message as input from terminal
+		s.send(message)
+
+		print s.recv(1024)
+		s.close()
+		print('connection closed')
 
 
 	def register_to_master(self, data) :

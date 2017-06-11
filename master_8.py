@@ -8,6 +8,8 @@ from random import randint
 from thread import *
 from threading import Thread
 import port_mapper
+import socket                   # Import socket module
+import IP                       # module to calculate system IP
 import Find_IP
 import Trie
 import json
@@ -176,7 +178,6 @@ def slave_thread(bundle):
 
 class Master :
 	def __init__(self, port) :
-		#socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
@@ -189,12 +190,11 @@ class Master :
 		while True :
 			try :
 				if connection_type == 1 :
-					self.ip = ni.ifaddresses('wlp3s0')[2][0]['addr']
+					self.ip = ni.ifaddresses('enp1s0')[2][0]['addr']
 				else :
 					self.ip = ni.ifaddresses('eth0')[2][0]['addr']
 			except :
 				self.ip = ni.ifaddresses('eth0')[2][0]['addr']
-				print self.ip + '::::eth0000000000000'
 			finally :
 				break
 
@@ -202,6 +202,9 @@ class Master :
 		# master sends own ip as it is also server
 		print "MY MASTER IP ::::" + self.ip
 		self.last_ip = self.ip
+
+		self.register_to_persistence()
+
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
 
@@ -219,6 +222,8 @@ class Master :
 		fHandle.close()
 
 		print "yes.. bind.. retuen"
+
+		return 
 		
 		try:
 			Thread(target=self.bind_and_serve, args=()).start()
@@ -226,6 +231,21 @@ class Master :
 			print errtxt
 
 		#start_new_thread(self.bind_and_serve, ())
+
+	def register_to_persistence(self):
+		s = socket.socket()             # Create a socket object
+		host = '172.17.23.17'
+		port = 11112                  # Reserve a port for your service.
+
+		s.connect((host, port))
+
+		message = " 1:JOIN master 1:738488"  # message format to join
+		#message = raw_input()              # get message as input from terminal
+		s.send(message)
+
+		print s.recv(1024)
+		s.close()
+		print('connection closed')
 
 
 
