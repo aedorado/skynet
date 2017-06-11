@@ -7,18 +7,37 @@ class Storage():
 		self.conn = db.connect('master.db')
 		self.cursor = self.conn.cursor()
 		self.cursor.execute('CREATE TABLE master_servers (ip, timestamp)')       # table for masters
+		self.cursor.execute('CREATE TABLE peer_servers (ip, timestamp, load)')   # table for servers
+
 
 	def add_new_server(self, add_ip):
 		try:
-			query = 'INSERT INTO master_servers (ip) VALUES (?)'
+			query = 'INSERT INTO peer_servers (ip) VALUES (?)' 
 			self.cursor.execute(query, (add_ip, ))
-			self.conn.commit()
+			self.conn.commit()                                     # to save changes
 		except db.IntegrityError:
 			self.add_heartbeat(add_ip)
 
-	def add_heartbeat(self, add_ip):
+	def add_heartbeat_server(self, add_ip):
+		query = 'UPDATE peer_servers SET timestamp=? WHERE ip=?'
+		self.cursor.execute(query, (time.time(), add_ip))
+		self.conn.commit()
+     
+	def add_load_server(self, add_ip, load):                       # load is number of clients attached
+		query = 'UPDATE peer_servers SET load=? WHERE ip=?'
+		self.cursor.execute(query, (load, add_ip))
+		self.conn.commit()
+
+	def add_new_master(self, add_ip):
+		try:
+			query = 'INSERT INTO master_servers (ip) VALUES (?)' 
+			self.cursor.execute(query, (add_ip, ))
+			self.conn.commit()                                     # to save changes
+		except db.IntegrityError:
+			self.add_heartbeat(add_ip)
+
+	def add_heartbeat_master(self, add_ip):
 		query = 'UPDATE master_servers SET timestamp=? WHERE ip=?'
-		# self.cursor.execute(query, (datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'), add_ip))
 		self.cursor.execute(query, (time.time(), add_ip))
 		self.conn.commit()
 
