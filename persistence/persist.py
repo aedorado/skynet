@@ -5,7 +5,7 @@ import sqlite3 as db
 def start_listening():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	host = socket.gethostname()               # Get local machine name   
-	s.bind(('172.17.23.17', 11111))           # for same machine
+	s.bind(('172.17.23.17', 11114))           # for same machine
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -18,9 +18,12 @@ def start_listening():
 		if msg.find("master") is not -1:
 			if msg.find('1:JOIN') is not -1:
 			#	new_ip = msg[msg.rfind(':') + 1:]   # finding the ip from the message received
+				master_id = msg[msg.rfind(':') + 1:]		#recieved master_id from the master
 				try:
 					stor.add_new_master(new_ip)     # new server added
-					conn.send('Master ADDED')
+			#		conn.send('Master ADDED')
+					stor.add_id_master(new_ip,master_id) #adding id for the master
+					conn.send('Master ADDED WITH its MASTER_ID')
 				except:
 					print 'Error occured'
 					conn.send('Master addition FAILED')				
@@ -34,10 +37,12 @@ def start_listening():
 				pass
 		elif msg.find("server") is not -1:
 			if msg.find('1:JOIN') is not -1:
-				print new_ip
+			#	print new_ip
+				server_id = msg[msg.rfind(':') + 1:]       #recieved server _id from the server
 				try:
 					stor.add_new_server(new_ip)     # new server added
-					conn.send('Peer ADDED')
+					stor.add_id_server(new_ip,server_id) #adding id for the server
+					conn.send('Peer ADDED WITH its SERVER_ID')
 				except:
 					print 'Error occured'
 					conn.send('Peer addition FAILED')				
