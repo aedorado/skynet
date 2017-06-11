@@ -6,6 +6,7 @@ class Storage():
 	def __init__(self):
 		self.conn = db.connect('master.db')
 		self.cursor = self.conn.cursor()
+		self.cursor.execute('CREATE TABLE master_servers (ip, timestamp)')       # table for masters
 
 	def add_new_server(self, add_ip):
 		try:
