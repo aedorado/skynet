@@ -14,16 +14,16 @@ parser.add_argument(
     '-d',
     '--download',
     type=str,
-    help='Search for the specified file.')
+    help='Download the specified file.')
 
 args = parser.parse_args()
+
+print args.upload
 
 if args.upload:
 	c = Client()
 	c.upload_file(args.upload)
 
-if args.search:
+if args.download:
     c = Client()
-    c.query_file(args.search)
-	# c.download_file('172.19.17.187', 'new_client.py')
-	# c.download_file('172.19.17.188', '1.mp3')
+    c.download_file('10.0.0.4', '1.mp3')

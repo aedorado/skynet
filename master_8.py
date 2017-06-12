@@ -203,7 +203,7 @@ class Master :
 		print "MY MASTER IP ::::" + self.ip
 		self.last_ip = self.ip
 
-		self.register_to_persistence()
+		#self.register_to_persistence()
 
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
