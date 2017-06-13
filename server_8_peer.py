@@ -15,28 +15,11 @@ import Trie
 
 import FileServer
 
-'''
-Find self ip - import os
-f = os.popen('ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1')
-your_ip=f.read()
-
-
-or else
-import netifaces as ni
-ni.ifaddresses('wlp3so')
-ip = ni.ifaddresses('eth0')[2][0]['addr']
-'''
-
-#server listens at 8870
-
-
-'''run :: python server_8_peer.py 11526 11826 10723'''
-'''run + master :: echo '0' > master_stub.txt | python server_8_peer.py 11523 11823 10723'''
 BUFFER = 4096
 count = 0
 
 
-def update_trie(self, filename) :
+def update_trie(self, filename,master_ip) :
 	soc_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	print filename
@@ -45,7 +28,7 @@ def update_trie(self, filename) :
 
 	while True :
 		try :
-			soc_conn_master.connect((self.MASTER_HOST, self.MASTER_PORT))
+			soc_conn_master.connect((master_ip, self.MASTER_PORT))
 		except :
 			print 'Unable to connect. Retrying after 100 millisecinds ..'
 			time.sleep(0.1)
@@ -158,7 +141,13 @@ def client_thread(buff):
 				filename = data[data.rfind(':')+1:]
 
 				#update_trie(self, filename)
-				update_trie(self, filename+'<IP>'+my_ip)       # later not to store ip beacuse trie on master will just have the file names
+
+
+				masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
+				list_of_masters = masters_list.split()
+
+				for master_ip in list_of_masters:
+					update_trie(self, filename+'<IP>'+my_ip,master_ip)       # later not to store ip beacuse trie on master will just have the file names
 
 				while  True:
 					try :
@@ -200,6 +189,22 @@ def client_thread(buff):
 	#came out of loop
 	#conn.close()
 
+def get_masters_from_persistence(message):
+	s = socket.socket()             # Create a socket object
+    #host = '172.17.23.17'
+	host = '172.26.35.147'	
+	port = 11122                 # Reserve a port for your service.
+
+	s.connect((host, port))
+	print "connected server to persis to get master"
+	
+	s.send(message)
+
+	masters_list = s.recv(1024)
+	print "heuu ",masters_list
+	s.close()
+	print('connection closed')
+	return masters_list
 
 
 def peer_thread(bundle):
@@ -301,22 +306,29 @@ class Server :
 		fHandle.close()
 		data = data.strip()
 
-		if data == '0' :                         # becoming master
+		#print "getting list of masters :"
+		#masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
+		#print "99 ",masters_list
+		#exit()
+
+		if data == '0' :                         # decide this condition of master selection later
 			print "Initiating master"
 			self.master_node = master_8.Master(self.MASTER_PORT)  
 
 
-#		else :  
-#			self.register_to_persistence()
-
-		self.bind_and_serve()                 # communication with peers and clients after server creation
+		else :  
+			print "Initiating Server"
+			self.register_to_persistence()
+			self.bind_and_serve()                 # communication with peers and clients after server creation
+		
 		print 'Super Outside'
 		
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
-		host = '172.17.23.17'
-		port = 11112                  # Reserve a port for your service.
+		#host = '172.17.23.17'
+		host = '172.26.35.147'
+		port = 11120                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
