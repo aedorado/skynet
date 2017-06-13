@@ -203,12 +203,13 @@ class Master :
 		print "MY MASTER IP ::::" + self.ip
 		self.last_ip = self.ip
 
-		#self.register_to_persistence()
+		self.register_to_persistence()
 
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
 
 		self.socket_objects = []
+		print "created trie object"
 		self.Trie_obj = Trie.Trie()
 
 		#bound = self.socket_bind()   #.. there is a definite pattern to accept request
@@ -219,11 +220,10 @@ class Master :
 		#so it must update the file .. i.e the database about its existence
 		fHandle = open('master_stub.txt', 'w')
 		data = fHandle.write(self.ip + ',' + str(self.PORT))
+		#data = fHandle.write('0')
 		fHandle.close()
 
 		print "yes.. bind.. retuen"
-
-		return 
 		
 		try:
 			Thread(target=self.bind_and_serve, args=()).start()
@@ -234,8 +234,9 @@ class Master :
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
-		host = '172.17.23.17'
-		port = 11112                  # Reserve a port for your service.
+		host = '172.26.35.147'
+		#host = '172.17.23.17'
+		port = 11116                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
