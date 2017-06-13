@@ -1,9 +1,12 @@
 import sqlite3 as db
 import datetime, time
+import random
+import os
 
 class Storage():
 
 	def __init__(self):
+		os.remove('master.db')              # to delete the already created database
 		self.conn = db.connect('master.db')
 		self.cursor = self.conn.cursor()
 		self.cursor.execute('CREATE TABLE master_servers (master_id ,ip, timestamp)')       # table for masters
@@ -33,6 +36,22 @@ class Storage():
 		self.cursor.execute(query, (server_id, add_ip))
 		self.conn.commit()
 
+	def get_server(self):
+		#print "getting master"
+		query = 'SELECT ip FROM peer_servers ORDER BY load'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
+		print rows
+		return rows
+
+	def get_list_of_masters(self):
+		query = 'SELECT ip FROM peer_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchall()
+		new_list = ""
+		for i in rows:
+			new_list = new_list + " " + i[0]
+		#print new_list
+		return new_list
+
 	def add_new_master(self, add_ip):
 		try:
 			query = 'INSERT INTO master_servers (ip) VALUES (?)' 
@@ -47,9 +66,18 @@ class Storage():
 		self.conn.commit()
 
 	def add_id_master(self, add_ip, master_id):                       # setting master_id to every master as unique identifier
-		query = 'UPDATE peer_servers SET master_id=? WHERE ip=?'
+		query = 'UPDATE master_servers SET master_id=? WHERE ip=?'
 		self.cursor.execute(query, (master_id, add_ip))
 		self.conn.commit()
+
+	def get_master(self):
+		#print "getting master"
+		query = 'SELECT COUNT(*) FROM master_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
+		query = 'SELECT ip from master_servers ORDER BY RANDOM() LIMIT 1'    # to get a random master from the persistence
+		n = random.randint(0,4)
+		ip = self.cursor.execute(query).fetchone()[0]
+		return ip
 
 	def clean(self):
 		# must remove outdated entries
