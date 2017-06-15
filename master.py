@@ -1,90 +1,108 @@
 import math
-import traceback
 import socket, select, string, sys
 sys.path.insert(0, '../Find_IP/')
 sys.path.insert(0, '../Trie/')
 import netifaces as ni
-from random import randint
+import socket                   # Import socket module
+import IP                       # module to calculate system IP
+import time
+import master_8
 from thread import *
 from threading import Thread
 import port_mapper
-import socket                   # Import socket module
-import IP                       # module to calculate system IP
 import Find_IP
 import Trie
-import json
-from random import randint
+
+import FileServer
 
 BUFFER = 4096
+count = 0
 
-def slave_thread(bundle):
-	global BUFFER
-	conn = bundle[0]
-	self = bundle[1]
 
-	#Sending message to connected client
-	#conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
-	ip_current_server = ""
-	ip_server_id = 0
+def update_trie(self, filename,master_ip) :
+	soc_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	print "At master handler"
+	print filename
+	print self.MASTER_HOST
+	self.MASTER_PORT = 2034
+
+	while True :
+		try :
+			soc_conn_master.connect((master_ip, self.MASTER_PORT))
+		except :
+			print 'Unable to connect. Retrying after 100 millisecinds ..'
+			time.sleep(0.1)
+		finally :
+			break
+
+	message = "18:update_trie:" + filename
+	print message + '------------------------------'
+
+	while True :
+		try :
+			#Set the whole string
+			soc_conn_master.sendall(message)
+		except socket.error:
+			#Send failed
+			print 'Send failed server' + message
+			continue
+			#sys.exit()
+		finally :
+			break
+
+
+	print 'Message send successfully to server :: ' + message
+
+	while True :
+		try :
+			data = soc_conn_master.recv(4096)
+			print data + "kkppp"
+		except  :
+			print 'Recv Failed server' + message
+			continue
+			#sys.exit()
+		finally :
+			print data
+			break
+
+	soc_conn_master.close()
+
+
+def client_thread(buff):
+	global BUFFER, count
+	count += 1
+
+	my_ip = "10.0.0.4"         # ip of master
+	conn = buff[0]
+	self = buff[1]
+	used_port = 0
+	file_server = ""
+	
 	#infinite loop so that function do not terminate and thread do not end.
 	#here should be added a try catch block - to detect lost connecions or failed connections
 	try :
-	#if True :
 		while True:
-			#print conn
+			'''here there will be the logic 
+				* to respond to interconnection request from another tier2 server (this will be constant connections)
+				* the other type of connection may be from clients.. this can be search request, 
+				* each client will be connected to the client
+				* each upload or download will be done by server initiating a new connection from and to client respectively
+			'''
 			#Receiving from client
-			print "i am indide..."
 			data = conn.recv(BUFFER)
-			print data
-			print "kkk"
-			print  data[:3] == '20:'
-			print data[:3]
+			print "data ",data
+			print data[:-1]
+			reply = 'OK...' + data
 
-			#reply = 'OK...' + data
-			print self.CONNECTION
-			if data[:2] == '1:' :
-				print data
-				if data[data.rfind(':') + 1:] in self.CONNECTION :    # this is updating server ip
-					ip_current_server = data[data.rfind(':') + 1:]
-					self.CONNECTION[ip_current_server] = 1
-					self.tier_two_server_count += 1
-				else :
-					ip_current_server = data[data.rfind(':') + 1:]
-					self.CONNECTION.update({ip_current_server : 1}) # 1 means that it is connected
-					#self.tier_two_server_count += 1
 
-				#conn.sendall('2:ip:' + self.last_ip)  # sending ip to which the tier 2 server should connect
-				message = '2:peer_ip:' + self.last_ip
-				while  True:
-					try :
-						#Set the whole string
-						conn.sendall(message)
-					except socket.error:
-						#Send failed
-						print 'Send failed and retrying'
-						conn.close()
-						break
-						#ontinue
-					finally :
-						break
-				#update last ip
-				print data
-				self.last_ip = data[data.rfind(':') + 1:] 
-				print "self.last_ip :::::: " + self.last_ip
+			# '7:' prefix for connection ... corresponding reply
+			# '9:' search request ..   # inverted trie implementation
+			# '15:' upload request from client
+			if data[:-1] == '' :
 				break
-			elif data[:2] == '5:' :   # this is for sending message to client whom to connect with
-				#handling connections from clients
-				print "i was here"
-				keys = self.CONNECTION.keys()  # because connection contains the information ... "ip" : 0/1
-				length = len(keys)
-				print keys
-				selected_key  = keys[randint(0,length-1)]
-				print self.CONNECTION
-				print selected_key   
-				message = "6:connect_to:" + selected_key
-				print message
+			elif data[:2] == '7:' :
+				print 'New connection initiated; sending reply'
+				message = '8:ACK'
 				while  True:
 					try :
 						#Set the whole string
@@ -92,36 +110,136 @@ def slave_thread(bundle):
 					except socket.error:
 						#Send failed
 						print 'Send failed and retrying'
-						conn.close()
-						break
-						#ontinue
+						continue
 					finally :
 						break
+			elif data[:3] == '14:' :
+				print 'Threaded implementation of file upload'
+				used_port = self.PORT_Mapper.get_port()
+				print "Get port = %d" %used_port
+				self.PORT_Mapper.use_port(used_port)
+				message = '15:port:' + str(used_port)
+				file_server = FileServer.FileServer(used_port)
+				file_server.setSharedDirectory('/home/kritika/Desktop/files')
+				file_server.startServer()
+
+				while  True:
+					try :
+						conn.sendall(message)
+					except socket.error:
+						print 'Send failed and retrying'
+						break
+					finally :
+						break
+						#break
+			elif data[:3] == '16:' :
+				#Threaded implementation of file upload
+				print 'updation of trie after file upload'
+				self.PORT_Mapper.free_port(used_port)
+				message = '17:ACK:' + str("none")
+				file_server.stopServer()
+				filename = data[data.rfind(':')+1:]
+
+				#update_trie(self, filename)
+
+
+				masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
+				list_of_masters = masters_list.split()
+
+				for master_ip in list_of_masters:
+					update_trie(self, filename+'<IP>'+my_ip,master_ip)       # later not to store ip beacuse trie on master will just have the file names
+
+				while  True:
+					try :
+						#Set the whole string
+						conn.sendall(message)
+					except socket.error:
+						#Send failed
+						print 'Send failed and retrying'
+						continue
+					finally :
+						count -= 1
+						conn.close()
+						break
+			#elif data[:3] == '10:' :   
+			#	print 'Threaded implementation of file upload'
+			#	message = '11:IP_address:10.0.0.4'
+			#	while  True:
+			#		try :
+			#			#Set the whole string
+			#			conn.sendall(message)
+			#		except socket.error:
+			#			#Send failed
+			#			print 'Send failed and retrying'
+			#			continue
+			#		finally :
+			#			break
+
+			elif data[:-1] == 'exit':
+				print 'connection closed' 
 				conn.close()
 				break
-			elif data[:3] == '10:' :  # JUST ......... TO ..... TEST
+			#conn.sendall(reply)
+	except :
+		conn.close()
+	finally :
+		conn.close()
+	#conn.sendall(reply)
+	 
+	#came out of loop
+	#conn.close()
+
+def get_masters_from_persistence(message):
+	s = socket.socket()             # Create a socket object
+    #host = '172.17.23.17'
+	host = '172.26.35.147'	
+	port = 11126                 # Reserve a port for your service.
+
+	s.connect((host, port))
+	print "connected server to persis to get master"
+	
+	s.send(message)
+	print "hey 000"
+
+	masters_list = s.recv(1024)
+	print "heuu ",masters_list
+	s.close()
+	print('connection closed')
+	return masters_list
+
+
+def peer_thread(bundle):
+	global BUFFER
+
+	conn = bundle[0]
+	self = bundle[1]
+	addr = bundle[2]
+	#Sending message to connected client
+	#conn.send('Welcome to the server. Type something and hit enter\n') #send only takes string
+	
+	#infinite loop so that function do not terminate and thread do not end.
+	#here should be added a try catch block - to detect lost connecions or failed connections
+	try :
+		while True:
+			'''here there will be the logic 
+				* to respond to interconnection request from another tier2 server (this will be constant connections)
+				* the other type of connection may be from clients.. this can be search request, 
+				* each client will be connected to the client
+				* each upload or download will be done by server initiating a new connection from and to client respectively
+			'''
+			#Receiving from client
+			data = conn.recv(BUFFER)
+			print data[:-1]
+			reply = 'OK...' + data
+
+			if data[:2] == '3:' :   
 				#Threaded implementation of file upload
 				print 'Threaded implementation of file upload'
-				message = '10:ACK:' + str("172.19.17.183") 
-				while  True:
-					try :
-						#Set the whole string
-						conn.sendall(message)
-					except socket.error:
-						#Send failed
-						print 'Send failed and retrying'
-						conn.close()
-						break
-						#ontinue
-					finally :
-						break
-			elif data[:3] == "18:" :
-				print 'Updating Trie'
-				message = '19:ACK:trie_updated'
-				filename = data[data.rfind(':') + 1:]
+				#print 'New connection initiated; sending reply'
+				self.front = addr
+				print "Peer accepted from ::::::::: %s" %self.front
+				message = '4:ACK:added_as_next_peer'
 				print message
-				self.Trie_obj.insert(filename) 
-				print "IN MASTER TRIE HANDLER"
 				while  True:
 					try :
 						#Set the whole string
@@ -131,116 +249,76 @@ def slave_thread(bundle):
 						print 'Send failed and retrying'
 						continue
 					finally :
-						conn.close()
-						break
-				break
-			elif data[:3] == '20:' :
-				print 'Search Trie'
-				filename = data[data.rfind(':') + 1:]
-				#print message
-				result_dic = self.Trie_obj.search_get_json(filename) 
-				message = '21:ACK:' + json.dumps(result_dic)
-				print message
-				print "IN MASTER TRIE QUERY HANDLER"
-				while  True:
-					try :
-						#Set the whole string
-						conn.sendall(message)
-					except socket.error:
-						#Send failed
-						print 'Send failed and retrying'
-						continue
-					finally :
-						conn.close()
 						break
 				break
 			elif data[:-1] == 'exit':
 				print 'connection closed' 
 				conn.close()
-				del self.CONNECTION[ip_current_server]
-				self.tier_two_server_count -= 1
-				#del self.CONNECTION[data[5:-1]]
-				conn.close()
 				break
-			#conn.sendall(reply)
-			print data
-	except  Exception, excep :
-		print 'problem detected'
-		self.CONNECTION[ip_current_server] = 0   # 0 means disconnected  .. this is to be updated onto a database
-		self.tier_two_server_count -= 1
+			conn.sendall(reply)
+	except :
+		print "Prob detected"
 		conn.close()
 	#conn.sendall(reply)
-	print "Exiting" 
+	 
 	#came out of loop
 	#conn.close()
 
-#master listens at 10560
 
-class Master :
-	def __init__(self, port) :
+
+
+
+class Server :
+	def __init__(self, server_port, peer_port, master_port) :
 
 		#create id of server using the hash of IP address and MAC
 		self.HOST = ''   # Symbolic name meaning all available interfaces
-		self.PORT = int(port)
-
-		
-		self.tier_two_server_count = 0
+		#self.PORT = 9167 # All servers will listen on this port -- to listen to CLIENTS
+		#self.PEER_PORT = 9570 # to listen to PEERS
+		#self.MASTER_PORT = 11500
+		self.back = ""
+		self.front = ""
+		self.PORT = int(server_port)
+		self.PEER_HOST = "s"
+		self.PEER_PORT = int(peer_port)
+		self.MASTER_PORT= int(master_port)
+		self.MASTER_HOST = "10.0.0.4"
+		self.PORT_Mapper = port_mapper.PortMap()
 		self.ip = ""
 		connection_type = 1
+		print "GOING TO INITIALIZE IP ADDRESSSSSSSS"
 		while True :
 			try :
 				if connection_type == 1 :
 					self.ip = ni.ifaddresses('enp1s0')[2][0]['addr']
 				else :
 					self.ip = ni.ifaddresses('eth0')[2][0]['addr']
+				if self.ip == "" :
+					continue				
 			except :
 				self.ip = ni.ifaddresses('eth0')[2][0]['addr']
 			finally :
 				break
 
-		# variable for initial logic .. 
-		# master sends own ip as it is also server
-		print "MY MASTER IP ::::" + self.ip
-		self.last_ip = self.ip
+		self.socket_obj = {}
 
-		self.register_to_persistence()
+		self.HOST = self.ip 
 
-		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
-		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
-
-		self.socket_objects = []
-		print "created trie object"
-		self.Trie_obj = Trie.Trie()
-
-		#bound = self.socket_bind()   #.. there is a definite pattern to accept request
-
-		#here a mutex has to be implemented
-		#this file should be implemented using a database ...
-		#since the server creating a master is in actually a master
-		#so it must update the file .. i.e the database about its existence
-		fHandle = open('master_stub.txt', 'w')
-		data = fHandle.write(self.ip + ',' + str(self.PORT))
-		#data = fHandle.write('0')
-		fHandle.close()
-
-		print "yes.. bind.. retuen"
+		print "Initiating master"
+		self.master_node = master_8.Master(self.MASTER_PORT)  
 		
-		try:
-			Thread(target=self.bind_and_serve, args=()).start()
-		except Exception, errtxt:
-			print errtxt
-
-		#start_new_thread(self.bind_and_serve, ())
+		print 'Super Outside Master'
+		
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
-		host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 11116                  # Reserve a port for your service.
+		host = '172.26.35.147'
+		port = 11126                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
-		message = " 1:JOIN master 1:738488"  # message format to join
+		message = " 1:JOIN server 1:738488"  # message format to join
 		#message = raw_input()              # get message as input from terminal
 		s.send(message)
 
@@ -249,41 +327,153 @@ class Master :
 		print('connection closed')
 
 
+	def register_to_peer(self) :
+		#port = 8870
+		data = ""
 
-	def bind_and_serve(self):
-		self.socket_objects += [socket.socket(socket.AF_INET, socket.SOCK_STREAM)]
-		print 'Socket created   .... master'
-		print self.PORT
+		#print host + ' : host'
+		print "At register to peer"
+		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		print "Trying to register at peer"
+		print self.PEER_HOST
+		print self.PEER_PORT
 
 		while True :
+			try :
+				self.soc_conn_peer.connect((self.PEER_HOST, self.PEER_PORT))
+			except :
+				print 'Unable to connect. Retrying after 100 millisecinds ..'
+				time.sleep(0.1)
+				continue
+			finally :
+				break
+
+		message = "3:register_peer:" + self.ip
+		print message + '------------------------------'
+
+		while True :
+			try :
+				#Set the whole string
+				self.soc_conn_peer.sendall(message)
+			except socket.error:
+				#Send failed
+				print 'Send failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				break
+
+
+		print 'Message send successfully to server :: ' + message
+
+		while True :
+			try :
+				data = self.soc_conn_peer.recv(4096)
+				print data + "kkppp"
+			except  :
+				print 'Recv Failed server' + message
+				continue
+				#sys.exit()
+			finally :
+				print data + 'ACK from peer'
+				break
+
+		self.soc_conn_peer.close()
+
+
+
+
+	def socket_bind(self) :    # this effectively cannot be used anywhere
+		#trying to bind
+		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
+		#  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket_obj.update({'s_peer' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
+		#self.s_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print 'Socket created'
+		
+		while False :
 			#Bind socket to local host and port
 			try:
-				print 'ok'
-				self.socket_objects[0].bind((self.HOST, self.PORT))
-				#conn, addr = self.socket_objects[0].accept()
-				#self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+				self.socket_obj['s'].bind((self.HOST, self.PORT))
+				self.socket_obj['s'].listen(10)
+				self.socket_obj['s_peer'].bind((self.HOST, self.PEER_PORT))
+				self.socket_obj['s_peer'].listen(10)
+				#self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)   # to enable resuse ofaddress
+				#self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)	# enables reuse of address
+			except socket.error as msg:
+				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+				continue
+			finally :
+				break
+			     
+		print 'Socket bind complete and listenning' 
+		return True 
+
+
+	def peer_thread_accept(self):
+		self.socket_obj.update({'s_peer' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
+
+		#Bind socket to local host and port for listening to peers of tier 2
+		while True :
+			try:
+				self.socket_obj['s_peer'].bind((self.HOST, self.PEER_PORT))
 			except socket.error as msg:
 				print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
 				continue
 			finally :
 				break
 
-		self.socket_objects[0].listen(10)
-		#print "master established...."
+		self.socket_obj['s_peer'].listen(10)
 
 		while True:
-			#wait to accept a connection - blocking call
-			conn, addr = self.socket_objects[0].accept()
-			print 'Connected @ master :: with ' + addr[0] + ':' + str(addr[1])
+			conn, addr = self.socket_obj['s_peer'].accept()
+			print 'Connected @ peer ... with ' + addr[0] + ':' + str(addr[1])
 			
-			bundle = [conn, self]
+			bundle = [conn, self, addr[0]]			
 			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-			start_new_thread(slave_thread ,(bundle,))
+			start_new_thread(peer_thread ,(bundle,))
+
+
+	def bind_and_serve(self):
+		# ***  here we can make another decision to keep two seperate ports to listen to PEERS and CLIENTS
+		# ***  else we can keep same port and complicate the code
+
+		print "Inside server serve .."
+
+#		try:
+#			Thread(target=self.peer_thread_accept, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
+#		except Exception, errtxt:
+#			print errtxt
+#
+		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})  # dictionary update for the socket created
+																						   # to listen to the clients
+	    # This while loop justs binds the server to the socket created
+		while True :
+			try:
+				print 'BINDING TO SERVER PORT',self.HOST," ",self.PORT
+				self.socket_obj['s'].bind((self.HOST, self.PORT))
+			except socket.error as msg:
+				print 'Bind failed in bind_and_serve. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+				continue
+			finally :
+				break
+
+		self.socket_obj['s'].listen(10)           # start listening to the clients
+
+		while True:
+			conn, addr = self.socket_obj['s'].accept()
+			print 'Connected with ' + addr[0] + ':' + str(addr[1])
+			 
+			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
+			buff = [conn, self]
+			start_new_thread(client_thread ,(buff,))       # separate thread for each client
 
 
 def main() :
-	master_obj = Master()
+	server_obj = Server(sys.argv[1], sys.argv[2], sys.argv[3])
+	#server_obj.serve()
 
 
-if __name__ == '__main__' :
+if __name__ == "__main__" :
 	main()
