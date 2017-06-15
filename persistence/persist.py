@@ -10,27 +10,14 @@ def start_listening():
 	#s.bind(('10.0.0.4',11114))
 	#port_mapper_obj = pm.PortMap()
 	#port = port_mapper_obj.get_port()
-	s.bind(('172.26.35.147',11122))
+	s.bind(('172.26.35.147',11111))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
 
 	while True:
-		stor.add_new_master('162.45.6.1')
-		stor.add_new_master('162.45.6.2')
-		stor.add_new_master('162.45.6.3')
-		stor.add_new_master('162.45.6.4')
-
-		stor.add_new_server('172.31.1.2')
-		stor.add_load_server('172.31.1.2',4)
-		stor.add_new_server('172.31.1.1')
-		stor.add_load_server('172.31.1.1',2)
-		stor.add_new_server('172.31.1.3')
-		stor.add_load_server('172.31.1.3',8)
-		stor.add_new_server('172.31.1.4')
-		stor.add_load_server('172.31.1.4',1)
-		stor.add_new_server('172.31.1.5')
-		stor.add_load_server('172.31.1.5',3)
+		print "Creating dummy table"
+		#---------Dummy Table---------
 
 		conn, addr = s.accept()
 		msg = conn.recv(1024)
@@ -102,7 +89,7 @@ def start_listening():
 				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:
 					server_ip = stor.get_server()
-					conn.send('Server ip:'+server_ip)
+					conn.send(server_ip)
 				except:
 					print 'Error occured'
 					conn.send('Server allocation failed')

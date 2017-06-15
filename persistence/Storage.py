@@ -15,8 +15,8 @@ class Storage():
 
 	def add_new_server(self, add_ip):
 		try:
-			query = 'INSERT INTO peer_servers (ip) VALUES (?)' 
-			self.cursor.execute(query, (add_ip, ))
+			query = 'INSERT INTO peer_servers (ip,load) VALUES (?,?)' 
+			self.cursor.execute(query, (add_ip,0 ))
 			self.conn.commit()                                     # to save changes
 		except db.IntegrityError:
 			self.add_heartbeat(add_ip)
@@ -32,8 +32,11 @@ class Storage():
 		self.conn.commit()
 	
 	def add_id_server(self, add_ip, server_id):                       # setting server_id to every server as unique identifier
+		initial_id = 10001
+		query = 'SELECT COUNT(*) FROM peer_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE peer_servers SET server_id=? WHERE ip=?'
-		self.cursor.execute(query, (server_id, add_ip))
+		self.cursor.execute(query, (initial_id+rows, add_ip))
 		self.conn.commit()
 
 	def get_server(self):
@@ -66,8 +69,11 @@ class Storage():
 		self.conn.commit()
 
 	def add_id_master(self, add_ip, master_id):                       # setting master_id to every master as unique identifier
+		initial_id = 90001
+		query = 'SELECT COUNT(*) FROM master_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE master_servers SET master_id=? WHERE ip=?'
-		self.cursor.execute(query, (master_id, add_ip))
+		self.cursor.execute(query, (initial_id+rows, add_ip))
 		self.conn.commit()
 
 	def get_master(self):
