@@ -24,7 +24,7 @@ def update_trie(self, filename,master_ip) :
 
 	print filename
 	print self.MASTER_HOST
-	print self.MASTER_PORT
+	self.MASTER_PORT = 2045
 
 	while True :
 		try :
@@ -161,19 +161,19 @@ def client_thread(buff):
 						count -= 1
 						conn.close()
 						break
-			elif data[:3] == '10:' :   
-				print 'Threaded implementation of file upload'
-				message = '11:IP_address:10.0.0.4'
-				while  True:
-					try :
-						#Set the whole string
-						conn.sendall(message)
-					except socket.error:
-						#Send failed
-						print 'Send failed and retrying'
-						continue
-					finally :
-						break
+			#elif data[:3] == '10:' :   
+			#	print 'Threaded implementation of file upload'
+			#	message = '11:IP_address:10.0.0.4'
+			#	while  True:
+			#		try :
+			#			#Set the whole string
+			#			conn.sendall(message)
+			#		except socket.error:
+			#			#Send failed
+			#			print 'Send failed and retrying'
+			#			continue
+			#		finally :
+			#			break
 
 			elif data[:-1] == 'exit':
 				print 'connection closed' 
@@ -193,12 +193,13 @@ def get_masters_from_persistence(message):
 	s = socket.socket()             # Create a socket object
     #host = '172.17.23.17'
 	host = '172.26.35.147'	
-	port = 11122                 # Reserve a port for your service.
+	port = 11126                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
 	
 	s.send(message)
+	print "hey 000"
 
 	masters_list = s.recv(1024)
 	print "heuu ",masters_list
@@ -301,6 +302,8 @@ class Server :
 
 		self.socket_obj = {}
 
+		self.HOST = self.ip 
+
 		fHandle = open('master_stub.txt')        # write 0 in stub file when starting the network
 		data = fHandle.read()
 		fHandle.close()
@@ -311,15 +314,15 @@ class Server :
 		#print "99 ",masters_list
 		#exit()
 
-		if data == '0' :                         # decide this condition of master selection later
-			print "Initiating master"
-			self.master_node = master_8.Master(self.MASTER_PORT)  
+#		if data == '0' :                         # decide this condition of master selection later
+#			print "Initiating master"
+#			self.master_node = master_8.Master(self.MASTER_PORT)  
 
 
-		else :  
-			print "Initiating Server"
-			self.register_to_persistence()
-			self.bind_and_serve()                 # communication with peers and clients after server creation
+#		else :  
+		print "Initiating Server"
+		self.register_to_persistence()
+		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
 		print 'Super Outside'
 		
@@ -328,7 +331,7 @@ class Server :
 		s = socket.socket()             # Create a socket object
 		#host = '172.17.23.17'
 		host = '172.26.35.147'
-		port = 11120                  # Reserve a port for your service.
+		port = 11126                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -465,7 +468,7 @@ class Server :
 	    # This while loop justs binds the server to the socket created
 		while True :
 			try:
-				print 'BINDING TO SERVER PORT'
+				print 'BINDING TO SERVER PORT',self.HOST," ",self.PORT
 				self.socket_obj['s'].bind((self.HOST, self.PORT))
 			except socket.error as msg:
 				print 'Bind failed in bind_and_serve. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]

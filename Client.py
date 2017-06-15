@@ -7,7 +7,7 @@ class Client():
 		self.MASTER_SERVER_IP = '10.0.0.4'	# GET from persistance
 		self.MASTER_SERVER_PORT = 3001
 
-		self.TIER_TWO_SERVER_PORT = 2001
+		self.TIER_TWO_SERVER_PORT = 2756
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
@@ -28,20 +28,22 @@ class Client():
 		# try :
 		if True:
 			sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			print "socket created"
 			sock_conn.connect((ip_address, port))
+			#sock_conn.connect(('172.26.35.147', 2039))
 			print 'Success\n'
 			return sock_conn
 		# except :
 			print 'Unable to connect'
 
 	def send_file_to_server(self, filename, upload_ip):
+		upload_ip = str(upload_ip)
 		fs = self.get_socket_connection(upload_ip, self.TIER_TWO_SERVER_PORT)
 		fs.sendall('14:Request_FTP_Port')
 		print 'FTP port request sent'
 		ftp_port = fs.recv(1024)
 		ftp_port = ftp_port[ftp_port.rfind(':') + 1:]
 		print 'FTP port received : ' + str(ftp_port)
-
 		ftp = FTP()
 		ftp.connect(upload_ip, ftp_port)
 		ftp.login()
@@ -53,16 +55,12 @@ class Client():
 		print 'Upload sucessful.'
 
 
-	def upload_file(self, filename):
-		print 'Requesting upload ip///////////////////**********'
-		tier_2_conn = self.get_socket_connection('10.0.0.4', self.TIER_TWO_SERVER_PORT)
-		print "hey"
-		tier_2_conn.sendall("10:upload")
-		upload_ip = tier_2_conn.recv(4096)
-		upload_ip = upload_ip[upload_ip.rfind(':') + 1:]
-		print 'Upload ip received ' + upload_ip + '\n'
-		self.send_file_to_server(filename, upload_ip)
-		tier_2_conn.close()
+	#def upload_file(self, filename,server_ip):
+	#	print 'Requesting upload ip///////////////////**********'
+	#	tier_2_conn = self.get_socket_connection(server_ip, self.TIER_TWO_SERVER_PORT)   # connecting to the ip of server 
+		#print "hey"																		 # received from the persistence module 
+	#	self.send_file_to_server(filename,server_ip)    #  sending file to the server 
+	#	tier_2_conn.close()
 
 
 	######################----------Leaving for now because not of use------------##################################
@@ -100,3 +98,5 @@ class Client():
 		fs.sendall('16:Close:')
 		fs.close()
 		print 'File sucessfully Downloaded.'
+
+	

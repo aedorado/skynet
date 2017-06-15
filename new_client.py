@@ -21,7 +21,7 @@ def connect_to_persistence(message):
     s = socket.socket()             # Create a socket object
     #host = '172.17.23.17'
     host = '172.26.35.147'
-    port = 11122                 # Reserve a port for your service.
+    port = 11126                 # Reserve a port for your service.
 
     s.connect((host, port))
     print "connected to persis"
@@ -41,7 +41,9 @@ print args.upload
 if args.upload:
     c = Client()
     server = connect_to_persistence("client 2:SERVER")  # 
-    c.upload_file(args.upload)
+    print server
+    c.send_file_to_server(args.upload,str(server))
+
 
 if args.download:
     c = Client()
