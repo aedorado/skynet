@@ -2,6 +2,8 @@ import sqlite3 as db
 import datetime, time
 import random
 import os
+import hashlib
+import ipaddress
 
 class Storage():
 
@@ -32,12 +34,26 @@ class Storage():
 		self.conn.commit()
 	
 	def add_id_server(self, add_ip, server_id):                       # setting server_id to every server as unique identifier
-		initial_id = 10001
 		query = 'SELECT COUNT(*) FROM peer_servers'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE peer_servers SET server_id=? WHERE ip=?'
-		self.cursor.execute(query, (initial_id+rows, add_ip))
+		self.cursor.execute(query, (server_id, add_ip))
 		self.conn.commit()
+
+	def get_first_server(self,new_ip):
+		query = 'SELECT ip FROM peer_servers'
+		rows = self.cursor.execute(query).fetchall()
+		diff = 100000000000000000000000000
+		ans = ""
+		new_ip = ipaddress.IPv4Address(unicode(new_ip))
+		for ip in rows:
+			iip = ip[0]
+			ip = ipaddress.IPv4Address(unicode(ip[0]))
+			new_diff = abs(int(new_ip) - int(ip))
+			if(diff > new_diff):
+				diff = new_diff
+				ans = iip
+		return ans
 
 	def get_server(self):
 		#print "getting master"
@@ -69,11 +85,10 @@ class Storage():
 		self.conn.commit()
 
 	def add_id_master(self, add_ip, master_id):                       # setting master_id to every master as unique identifier
-		initial_id = 90001
 		query = 'SELECT COUNT(*) FROM master_servers'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE master_servers SET master_id=? WHERE ip=?'
-		self.cursor.execute(query, (initial_id+rows, add_ip))
+		self.cursor.execute(query, (master_id, add_ip))
 		self.conn.commit()
 
 	def get_master(self):
@@ -88,3 +103,39 @@ class Storage():
 	def clean(self):
 		# must remove outdated entries
 		pass
+
+
+stor = Storage()
+
+print "Creating dummy table"
+#---------Dummy Table---------
+stor.add_new_server('10.0.0.9')
+server_id = hashlib.sha1('10.0.0.9').hexdigest()
+stor.add_id_server('10.0.0.9',server_id)
+#stor.add_load_server('172.31.1.1',4)
+stor.add_new_server('10.0.0.5')
+server_id = hashlib.sha1('10.0.0.5').hexdigest()
+stor.add_id_server('10.0.0.5',server_id)
+#stor.add_load_server('172.31.1.2',2)
+stor.add_new_server('10.0.0.7')
+server_id = hashlib.sha1('10.0.0.7').hexdigest()
+stor.add_id_server('10.0.0.7',server_id)
+#stor.add_load_server('172.31.1.3',8)
+stor.add_new_server('10.0.0.8')
+server_id = hashlib.sha1('10.0.0.8').hexdigest()
+stor.add_id_server('10.0.0.8',server_id)
+#stor.add_load_server('172.31.1.4',1)
+stor.add_new_server('10.0.0.1')
+server_id = hashlib.sha1('10.0.0.1').hexdigest()
+stor.add_id_server('10.0.0.1',server_id)
+#stor.add_load_server('172.31.1.5',3)
+stor.add_new_server('10.0.0.4')
+server_id = hashlib.sha1('10.0.0.4').hexdigest()
+stor.add_id_server('10.0.0.4',server_id)
+#stor.add_load_server('172.31.1.6',4)
+stor.add_new_server('10.0.0.3')
+server_id = hashlib.sha1('10.0.0.3').hexdigest()
+stor.add_id_server('10.0.0.3',server_id)
+#stor.add_load_server('172.31.1.7',4)
+
+print stor.get_first_server('10.0.0.2')

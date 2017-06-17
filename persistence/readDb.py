@@ -15,6 +15,6 @@ print "Opened servertable successfully";
 
 cursor = conn.execute("SELECT * from peer_servers")       # to read the table master_servers
 for row in cursor:
-	print row[0]," ",row[1]
+	print row[0]," ",row[1]," ",row[2]," ",row[3]
 
 conn.close()
