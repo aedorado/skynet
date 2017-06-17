@@ -1,7 +1,8 @@
 import socket
 from Storage import Storage
-import client_persist as cp
 import sqlite3 as db
+import IP
+import hashlib # library for sha1 hashing
 
 def start_listening():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,14 +11,47 @@ def start_listening():
 	#s.bind(('10.0.0.4',11114))
 	#port_mapper_obj = pm.PortMap()
 	#port = port_mapper_obj.get_port()
-	s.bind(('172.26.35.147',11111))
+	#s.bind(('172.26.35.147',11111))
+	ip_ob = IP.IP()
+	my_ip = ip_ob.get_my_ip()
+	s.bind((my_ip,11117))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
 
+
+	print "Creating dummy table"
+	#---------Dummy Table---------
+	stor.add_new_server('10.0.0.9')
+	server_id = hashlib.sha1('10.0.0.9').hexdigest()
+	stor.add_id_server('10.0.0.9',server_id)
+	#stor.add_load_server('172.31.1.1',4)
+	stor.add_new_server('10.0.0.5')
+	server_id = hashlib.sha1('10.0.0.5').hexdigest()
+	stor.add_id_server('10.0.0.5',server_id)
+	#stor.add_load_server('172.31.1.2',2)
+	stor.add_new_server('10.0.0.7')
+	server_id = hashlib.sha1('10.0.0.7').hexdigest()
+	stor.add_id_server('10.0.0.7',server_id)
+	#stor.add_load_server('172.31.1.3',8)
+	stor.add_new_server('10.0.0.8')
+	server_id = hashlib.sha1('10.0.0.8').hexdigest()
+	stor.add_id_server('10.0.0.8',server_id)
+	#stor.add_load_server('172.31.1.4',1)
+	stor.add_new_server('10.0.0.1')
+	server_id = hashlib.sha1('10.0.0.1').hexdigest()
+	stor.add_id_server('10.0.0.1',server_id)
+	#stor.add_load_server('172.31.1.5',3)
+	stor.add_new_server('10.0.0.4')
+	server_id = hashlib.sha1('10.0.0.4').hexdigest()
+	stor.add_id_server('10.0.0.4',server_id)
+	#stor.add_load_server('172.31.1.6',4)
+	stor.add_new_server('10.0.0.3')
+	server_id = hashlib.sha1('10.0.0.3').hexdigest()
+	stor.add_id_server('10.0.0.3',server_id)
+	#stor.add_load_server('172.31.1.7',4)
+
 	while True:
-		print "Creating dummy table"
-		#---------Dummy Table---------
 
 		conn, addr = s.accept()
 		msg = conn.recv(1024)
@@ -26,14 +60,12 @@ def start_listening():
 		if msg.find("master") is not -1:
 			#print "master detected"
 			if msg.find('1:JOIN') is not -1:
-			#	new_ip = msg[msg.rfind(':') + 1:]   # finding the ip from the message received
-				master_id = msg[msg.rfind(':') + 1:]		#recieved master_id from the master
-				#print "here ",msg
 				try:
+					A_server = stor.get_first_server(new_ip)
 					stor.add_new_master(new_ip)     # new server added
-			#		conn.send('Master ADDED')
+					master_id = hashlib.sha1(new_ip).hexdigest()
 					stor.add_id_master(new_ip,master_id) #adding id for the master
-					conn.send('Master ADDED WITH its MASTER_ID')
+					conn.send(master_id +":"+A_server)
 				except:
 					print 'Error occured'
 					conn.send('Master addition FAILED')				
@@ -47,12 +79,11 @@ def start_listening():
 				pass
 		elif msg.find("server") is not -1:
 			if msg.find('1:JOIN') is not -1:
-			#	print new_ip
-				server_id = msg[msg.rfind(':') + 1:]       #recieved server _id from the server
 				try:
 					stor.add_new_server(new_ip)     # new server added
+					server_id = hashlib.sha1(new_ip).hexdigest()        # nodeis from the server ip
 					stor.add_id_server(new_ip,server_id) #adding id for the server
-					conn.send('Peer ADDED WITH its SERVER_ID')
+					conn.send(server_id)                    # sending the nodeid to the server
 				except:
 					print 'Error occured'
 					conn.send('Peer addition FAILED')				
