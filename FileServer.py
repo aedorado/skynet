@@ -18,14 +18,17 @@ class FileServer:
         self.filesTransferred = 0
 
     def setSharedDirectory(self, path):
+        print "setting started"
         if not path_exists(path):
             raise FileNotFoundError
+        print "hey"
         self.authorizer = DummyAuthorizer()
         self.authorizer.add_anonymous(path, perm='elradfmwM')
         self.ftp_handler.authorizer = self.authorizer
 
     def startServer(self):
         self.server = FTPServer(('', self.port), self.ftp_handler)
+        print "process running:"
         self.server_proc = Process(target=self.server.serve_forever)
         self.server_proc.start()
         #self.server_proc.join()

@@ -14,7 +14,7 @@ def start_listening():
 	#s.bind(('172.26.35.147',11111))
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,11117))
+	s.bind((my_ip,11119))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -22,7 +22,7 @@ def start_listening():
 
 	print "Creating dummy table"
 	#---------Dummy Table---------
-	stor.add_new_server('10.0.0.9')
+	'''stor.add_new_server('10.0.0.9')
 	server_id = hashlib.sha1('10.0.0.9').hexdigest()
 	stor.add_id_server('10.0.0.9',server_id)
 	#stor.add_load_server('172.31.1.1',4)
@@ -50,7 +50,7 @@ def start_listening():
 	server_id = hashlib.sha1('10.0.0.3').hexdigest()
 	stor.add_id_server('10.0.0.3',server_id)
 	#stor.add_load_server('172.31.1.7',4)
-
+'''
 	while True:
 
 		conn, addr = s.accept()
@@ -80,10 +80,17 @@ def start_listening():
 		elif msg.find("server") is not -1:
 			if msg.find('1:JOIN') is not -1:
 				try:
+					status = stor.if_first_server()     # new server added
+					if(str(status) is "0"):
+						print "Adding the first server"
+					else:		
+						status = stor.get_first_server(new_ip)
 					stor.add_new_server(new_ip)     # new server added
+					status = str(status)
 					server_id = hashlib.sha1(new_ip).hexdigest()        # nodeis from the server ip
+					server_id = str(server_id)
 					stor.add_id_server(new_ip,server_id) #adding id for the server
-					conn.send(server_id)                    # sending the nodeid to the server
+					conn.send(server_id + ":" + status)                     # sending the nodeid to the server
 				except:
 					print 'Error occured'
 					conn.send('Peer addition FAILED')				

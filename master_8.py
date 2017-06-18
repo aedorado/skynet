@@ -198,6 +198,13 @@ class Master :
 			finally :
 				break
 
+		# just to show to bibhas sir-----
+		ip_ob = IP.IP()
+		my_ip = ip_ob.get_my_ip()
+		self.ip = my_ip
+		#---------------------------------
+
+
 		# variable for initial logic .. 
 		# master sends own ip as it is also server
 		print "MY MASTER IP ::::" + self.ip
@@ -237,17 +244,24 @@ class Master :
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
-		host = '172.26.35.147'
+
+		# just to show to bibhas sir-----
+		ip_ob = IP.IP()
+		my_ip = ip_ob.get_my_ip()
+		host = my_ip
+		#---------------------------------
+
+		#host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 11126                  # Reserve a port for your service.
+		port = 11112                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
-		message = " 1:JOIN master 1:738488"  # message format to join
+		message = " 1:JOIN master"  # message format to join
 		#message = raw_input()              # get message as input from terminal
 		s.send(message)
 
-		print s.recv(1024)
+		print "Master id : ",s.recv(1024)
 		s.close()
 		print('connection closed')
 

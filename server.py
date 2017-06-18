@@ -11,15 +11,20 @@ from thread import *
 from threading import Thread
 import port_mapper
 import Find_IP
+import hashlib
 import Trie
+import difflib
 
 import FileServer
+
+
+char_to_int = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'a':10,'b':11,'c':12,'d':13,'e':14,'f':15}
 
 BUFFER = 4096
 count = 0
 
 
-def update_trie(self, filename,master_ip) :
+'''def update_trie(self, filename,master_ip) :
 	soc_conn_master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	print filename
@@ -67,7 +72,7 @@ def update_trie(self, filename,master_ip) :
 
 	soc_conn_master.close()
 
-
+'''
 def client_thread(buff):
 	global BUFFER, count
 	count += 1
@@ -205,7 +210,7 @@ def get_masters_from_persistence(message):
 	host = my_ip
 	#---------------------------------
 
-	port = 11117                 # Reserve a port for your service.
+	port = 11114                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -242,15 +247,19 @@ def peer_back_process(bundle):
 			reply = 'OK...' + data
 
 			peer_ip = data[data.rfind('<ip>') + 1:]    # client ip from whom search started
+			peer_nodeid = hashlib.sha1(peer_ip).hexdigest()
 
-			if data.find("REQUEST INTERMEDIATE") is not -1:
-				step = data[data.rfind(':') + 1:]          # step to know which row of 
+			step = data[data.rfind(':') + 1:]          # step to know which row of 
 														 # its routing table to be returned
-				step_next = str(int(step) + 1)
+			step_next = str(int(step) + 1)
+
+			if data.find("REQUEST") is not -1:
 
 				print "Request query from the peer with ip : ",addr[0]
 
-			'''	if( ----- ):         ###########------ checking the leaf and routing --------
+				check = self.check_information(peer_nodeid,step)
+
+				if(check is not "NULL"):
 
 					try:                                # to forward the request to the next peer
 						msg_to_send = "REQUEST INTERMEDIATE <ip>"+ peer_ip +" :"+step_next
@@ -285,8 +294,7 @@ def peer_back_process(bundle):
 						print 'Send failed and retrying'
 						continue
 					finally :
-						break
-				'''
+						break'''
 			conn.close()
 			break
 			conn.sendall(reply)
@@ -315,6 +323,8 @@ class Server :
 		self.MASTER_HOST = ""
 		self.PORT_Mapper = port_mapper.PortMap()
 		self.ip = ""
+		self.nodeid = ""
+		self.A_server = ""
 
 		# Pastry protocol datastructures :--------
 		self.leaf = []       # contain Leaf nodes having L/2 closest small and L/2 closest greater nodes
@@ -344,38 +354,38 @@ class Server :
 	#	self.ip = my_ip
 		#---------------------------------
 
-		self.HOST = self.ip 
+		self.HOST = self.ip
+
+	#	self.leaf = ["abc4567","cd4562"]
+	#	temp = ["NULL"]*16
+	#	#print self.routing
+	#	self.routing.append(temp)
+	#	self.routing.append(temp)
+	#	self.routing.append(temp)
+	#	self.routing.append(temp)
+	#	self.routing[3][6] = "3496aa"
+	#	print self.check_information("3496fe",3) 
 
 		#print "getting list of masters :"
 		#masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
 		#print "99 ",masters_list
 		#exit()
 
-		self.register_to_persistence()
+	'''	self.register_to_persistence()
 
-		fHandle = open('server_stub.txt')        # write 0 in stub file when starting the network
-		data = fHandle.read()
-		fHandle.close()
-		data = data.strip()
-
-		if data.find('0') is not -1 :                         # decide this condition of master selection later
-			### to get ip of A server from persistence
-			A_server = '172.17.14.44'    # dummy ip
+		if self.A_server.find('0') is not -1 :                         # decide this condition of master selection later
+			print "I am the first peer in the network"
+		else:	
 			try:
-				data = Thread(target=self.peer_front_process, args=("REQUEST <ip>" +self.ip + " :0",A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
+				data = Thread(target=self.peer_front_process, args=("REQUEST <ip>" +self.ip + " :0",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
 				###  decode the received data after the search process done??????-------------------------
 			except Exception, errtxt:
 				print errtxt
 
-		
-		fHandle = open('server_stub.txt','w')        # write 0 in stub file when starting the network
-		data = fHandle.write(self.ip + ',' + str(self.PORT))
-		fHandle.close()
-
 		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
 		print 'Super Outside'
-		
+		'''
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
@@ -389,7 +399,7 @@ class Server :
 		#---------------------------------
 
 		#host = '172.26.35.147'
-		port = 11117                  # Reserve a port for your service.
+		port = 11119                  # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -398,20 +408,38 @@ class Server :
 		s.send(message)
 
 		msg = s.recv(1024)
-		A_server = msg[msg.rfind(':') + 1:]
-		my_nodeid = msg[:msg.rfind(':') - 1]
+		self.nodeid = msg[:msg.rfind(':') - 1]
+		self.A_server = msg[msg.rfind(':')  + 1:]
+		print msg
+
 		s.close()
 		print('connection closed')
 
+	def check_information(self,peer_nodeid,step):
+		l = len(self.leaf)
+		if(l==1):
+			return self.leaf[0]
 
-	def peer_front_process(self,msg_to_send,closest_peer) :
+		if(l>1 and peer_nodeid>=self.leaf[0] and peer_nodeid<=self.leaf[l-1]):
+			return min(self.leaf, key=lambda v: len(set(peer_nodeid) ^ set(v)))
+			#return difflib.get_close_matches(peer_nodeid, self.leaf,1)
+
+
+		print char_to_int[peer_nodeid[int(step)]]
+		if(len(self.routing) > step):
+			return self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]]              # sending the entry from routing table
+		return "NULL"
+
+
+	def peer_front_process(self,msg_to_send,closest_peer_ip) :
 		data = ""
 		print "Forwarding the message to the closest peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		while True :
 			try :
-				self.soc_conn_peer.connect((closest_peer, self.PEER_BACKWARD_PORT))
+				print "closest peer is : ",closest_peer_ip
+				self.soc_conn_peer.connect((closest_peer_ip, self.PEER_BACKWARD_PORT))
 			except :
 				print 'Unable to connect. Retrying after 100 millisecinds ..'
 				time.sleep(0.1)
@@ -435,22 +463,24 @@ class Server :
 
 	def peer_back_thread(self):
 		print "Accepting to peer servers"
-		self.socket_obj.update({'s_forward_peer' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
+		self.socket_obj.update({'port_for_back' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
+
+		print "Back port created"
 
 		#Bind socket to local host and port for listening to peers of tier 2
 		while True :
 			try:
-				self.socket_obj['s_backward_peer'].bind((self.HOST, self.PEER_FORWARD_PORT))
+				self.socket_obj['port_for_back'].bind((self.HOST, self.PEER_BACKWARD_PORT))
 			except socket.error as msg:
 				print 'Bind failed. Error Code'
 				continue
 			finally :
 				break
 
-		self.socket_obj['s_backward_peer'].listen(10)
+		self.socket_obj['port_for_back'].listen(10)
 
 		while True:
-			conn, addr = self.socket_obj['s_backward_peer'].accept()
+			conn, addr = self.socket_obj['port_for_back'].accept()
 			print 'Connected @ peer ... with ' + addr[0] + ':' + str(addr[1])
 			
 			bundle = [conn, self, addr[0]]			
@@ -458,7 +488,7 @@ class Server :
 			start_new_thread(peer_back_process ,(bundle,))
 
 
-	def peer_front_thread(self):
+	'''def peer_front_thread(self):
 		print "Accepting to peer servers"
 		self.socket_obj.update({'s_backward_peer' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})
 
@@ -480,7 +510,7 @@ class Server :
 			
 			bundle = [conn, self, addr[0]]			
 			#start_new_thread(peer_front_process ,(,))
-
+'''
 
 	def bind_and_serve(self):
 		# ***  here we can make another decision to keep two seperate ports to listen to PEERS and CLIENTS
@@ -488,10 +518,10 @@ class Server :
 
 		print "Inside server serve .."
 
-	#	try:
-	#		Thread(target=self.peer_back_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
-	#	except Exception, errtxt:
-	#		print errtxt
+		try:
+			Thread(target=self.peer_back_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
+		except Exception, errtxt:
+			print errtxt
 
 
 	#	try:
@@ -503,7 +533,7 @@ class Server :
 		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})  # dictionary update for the socket created
 																						   # to listen to the clients
 	    # This while loop justs binds the server to the socket created
-		while True :
+	'''	while True :
 			try:
 				print 'BINDING TO SERVER PORT',self.HOST," ",self.PORT
 				self.socket_obj['s'].bind((self.HOST, self.PORT))
@@ -522,7 +552,7 @@ class Server :
 			#start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
 			buff = [conn, self]
 			start_new_thread(client_thread ,(buff,))       # separate thread for each client
-
+'''
 
 def main() :
 	server_obj = Server(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

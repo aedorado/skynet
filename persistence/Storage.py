@@ -16,12 +16,20 @@ class Storage():
 
 
 	def add_new_server(self, add_ip):
+		query = 'SELECT COUNT(*) FROM peer_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
+		#print "size :",rows
 		try:
 			query = 'INSERT INTO peer_servers (ip,load) VALUES (?,?)' 
 			self.cursor.execute(query, (add_ip,0 ))
 			self.conn.commit()                                     # to save changes
 		except db.IntegrityError:
 			self.add_heartbeat(add_ip)
+
+	def if_first_server(self):
+		query = 'SELECT COUNT(*) FROM peer_servers'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchone()[0]
+		return rows
 
 	def add_heartbeat_server(self, add_ip):
 		query = 'UPDATE peer_servers SET timestamp=? WHERE ip=?'
@@ -105,7 +113,7 @@ class Storage():
 		pass
 
 
-stor = Storage()
+'''stor = Storage()
 
 print "Creating dummy table"
 #---------Dummy Table---------
@@ -138,4 +146,4 @@ server_id = hashlib.sha1('10.0.0.3').hexdigest()
 stor.add_id_server('10.0.0.3',server_id)
 #stor.add_load_server('172.31.1.7',4)
 
-print stor.get_first_server('10.0.0.2')
+print stor.get_first_server('10.0.0.2')'''

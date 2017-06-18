@@ -3,6 +3,7 @@
 import argparse
 from Client import Client
 import socket
+import IP
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--upload', type=str, help='Upload the specifired file')
@@ -20,8 +21,14 @@ parser.add_argument(
 def connect_to_persistence(message):
     s = socket.socket()             # Create a socket object
     #host = '172.17.23.17'
-    host = '172.26.35.147'
-    port = 11126                 # Reserve a port for your service.
+    # just to show to bibhas sir-----
+    ip_ob = IP.IP()
+    my_ip = ip_ob.get_my_ip()
+    host = my_ip
+    
+    #---------------------------------
+    #host = '172.26.35.147'
+    port = 11111                 # Reserve a port for your service.
 
     s.connect((host, port))
     print "connected to persis"

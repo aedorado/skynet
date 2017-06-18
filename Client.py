@@ -1,13 +1,21 @@
 import socket
 from ftplib import FTP
+import IP
 
 class Client():
 
 	def __init__(self):
-		self.MASTER_SERVER_IP = '10.0.0.4'	# GET from persistance
+		# just to show to bibhas sir-----
+		ip_ob = IP.IP()
+		my_ip = ip_ob.get_my_ip()
+		#self.ip = my_ip
+		self.MASTER_SERVER_IP = my_ip
+		#---------------------------------
+		#self.MASTER_SERVER_IP = 	# GET from persistance
+		
 		self.MASTER_SERVER_PORT = 3001
 
-		self.TIER_TWO_SERVER_PORT = 2756
+		self.TIER_TWO_SERVER_PORT = 3001
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
