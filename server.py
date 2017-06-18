@@ -250,7 +250,7 @@ def peer_back_process(bundle):
 
 				print "Request query from the peer with ip : ",addr[0]
 
-				if( ----- ):         ###########------ checking the leaf and routing --------
+			'''	if( ----- ):         ###########------ checking the leaf and routing --------
 
 					try:                                # to forward the request to the next peer
 						msg_to_send = "REQUEST INTERMEDIATE <ip>"+ peer_ip +" :"+step_next
@@ -286,7 +286,7 @@ def peer_back_process(bundle):
 						continue
 					finally :
 						break
-				
+				'''
 			conn.close()
 			break
 			conn.sendall(reply)
@@ -308,11 +308,11 @@ class Server :
 		#self.PEER_PORT = 9570 # to listen to PEERS
 		#self.MASTER_PORT = 11500
 		self.PORT = int(server_port)
-		self.PEER_HOST = "10.0.0.4"
+		self.PEER_HOST = ""
 		self.PEER_FORWARD_PORT = int(peer_forward_port)
 		self.PEER_BACKWARD_PORT = int(peer_backward_port)
 		self.MASTER_PORT= int(master_port)
-		self.MASTER_HOST = "10.0.0.4"
+		self.MASTER_HOST = ""
 		self.PORT_Mapper = port_mapper.PortMap()
 		self.ip = ""
 
@@ -339,42 +339,38 @@ class Server :
 		self.socket_obj = {}
 
 		# just to show to bibhas sir-----
-		ip_ob = IP.IP()
-		my_ip = ip_ob.get_my_ip()
-		self.ip = my_ip
+	#	ip_ob = IP.IP()
+	#	my_ip = ip_ob.get_my_ip()
+	#	self.ip = my_ip
 		#---------------------------------
 
 		self.HOST = self.ip 
-
-		fHandle = open('master_stub.txt')        # write 0 in stub file when starting the network
-		data = fHandle.read()
-		fHandle.close()
-		data = data.strip()
 
 		#print "getting list of masters :"
 		#masters_list = get_masters_from_persistence("server 2:LIST_OF_MASTERS")
 		#print "99 ",masters_list
 		#exit()
 
-#		if data == '0' :                         # decide this condition of master selection later
-#			print "Initiating master"
-#			self.master_node = master_8.Master(self.MASTER_PORT)  
+		self.register_to_persistence()
 
+		fHandle = open('server_stub.txt')        # write 0 in stub file when starting the network
+		data = fHandle.read()
+		fHandle.close()
+		data = data.strip()
 
-#		else :  
-		print "Initiating Server"
-		#self.register_to_persistence()
+		if data.find('0') is not -1 :                         # decide this condition of master selection later
+			### to get ip of A server from persistence
+			A_server = '172.17.14.44'    # dummy ip
+			try:
+				data = Thread(target=self.peer_front_process, args=("REQUEST <ip>" +self.ip + " :0",A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
+				###  decode the received data after the search process done??????-------------------------
+			except Exception, errtxt:
+				print errtxt
 
-		### to get ip of A server from persistence
-		A_server = 
-
-
-		try:
-			data = Thread(target=self.peer_front_process, args=("REQUEST <ip>" +self.ip + " :0",A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
-		except Exception, errtxt:
-			print errtxt
-
-		###  decode the received data after the search process done??????-------------------------
+		
+		fHandle = open('server_stub.txt','w')        # write 0 in stub file when starting the network
+		data = fHandle.write(self.ip + ',' + str(self.PORT))
+		fHandle.close()
 
 		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
@@ -483,7 +479,7 @@ class Server :
 			print 'Connected @ peer ... with ' + addr[0] + ':' + str(addr[1])
 			
 			bundle = [conn, self, addr[0]]			
-			start_new_thread(peer_front_process ,(,))
+			#start_new_thread(peer_front_process ,(,))
 
 
 	def bind_and_serve(self):
@@ -492,16 +488,16 @@ class Server :
 
 		print "Inside server serve .."
 
-		try:
-			Thread(target=self.peer_back_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
-		except Exception, errtxt:
-			print errtxt
+	#	try:
+	#		Thread(target=self.peer_back_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
+	#	except Exception, errtxt:
+	#		print errtxt
 
 
-		try:
-			Thread(target=self.peer_front_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
-		except Exception, errtxt:
-			print errtxt
+	#	try:
+	#		Thread(target=self.peer_front_thread, args=()).start()     # Separate thread to accept the incoming connections from tier 2 peers
+	#	except Exception, errtxt:
+	#		print errtxt
 
 
 		self.socket_obj.update({'s' : socket.socket(socket.AF_INET, socket.SOCK_STREAM)})  # dictionary update for the socket created
