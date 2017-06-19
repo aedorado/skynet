@@ -13,9 +13,9 @@ class Client():
 		#---------------------------------
 		#self.MASTER_SERVER_IP = 	# GET from persistance
 		
-		self.MASTER_SERVER_PORT = 3001
+		self.MASTER_SERVER_PORT = 2029
 
-		self.TIER_TWO_SERVER_PORT = 3001
+		self.TIER_TWO_SERVER_PORT = 2031
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
@@ -71,10 +71,9 @@ class Client():
 	#	tier_2_conn.close()
 
 
-	######################----------Leaving for now because not of use------------##################################
-	def query_file(self, filename):
+	def query_file(self, filename,master_ip):
 		print 'Searching for filename: ' + filename
-		master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
+		master_conn = self.get_socket_connection(master_ip, self.MASTER_SERVER_PORT)
 		master_conn.sendall('20:FILE_QUERY:' + filename)
 		json_result = master_conn.recv(8192)
 		print json_result
@@ -85,10 +84,10 @@ class Client():
 			print number + ' : ' + json_result[number]['filename']
 		print '\nEnter the filename'
 		file_id = raw_input()
-		print file_id, json_result[file_id]
+		#print file_id, json_result[file_id]
 		master_conn.close()
-		self.download_file(json_result[file_id]['ip'], json_result[file_id]['filename'])
-
+		#self.download_file(json_result[file_id]['ip'], json_result[file_id]['filename'])
+		return file_id
 
 	def download_file(self, download_ip, filename):
 		print "Downloading the file :"
@@ -106,5 +105,15 @@ class Client():
 		fs.sendall('16:Close:')
 		fs.close()
 		print 'File sucessfully Downloaded.'
+
+	def search_pastry(self,server,filename):
+		fs = self.get_socket_connection(server, self.TIER_TWO_SERVER_PORT)
+		filekey = ?????
+		fs.sendall('22:Request_the_target :'+filekey)
+		target_ip = fs.recv(1024)
+		fs.close()
+		return target_ip
+
+
 
 	

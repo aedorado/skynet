@@ -14,7 +14,7 @@ def start_listening():
 	#s.bind(('172.26.35.147',11111))
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,9976))
+	s.bind((my_ip,9935))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -104,9 +104,9 @@ def start_listening():
 			elif msg.find('IP_FROM_ID') is not -1:   
 				id = msg[msg.rfind(':') + 1:]  
 				try:
-					print str(id)
+				#	print str(id)
 					ip = stor.get_ip_from_nodeid(str(id))      # updating the time when last ping came from the masters/servers
-					print "ippppp ",ip
+					#print "ippppp ",ip
 					conn.send(str(ip))
 				except:
 					print 'Error occured'
@@ -121,7 +121,7 @@ def start_listening():
 				pass
 		elif msg.find("client") is not -1:
 			print "client detected"
-			print "Creating dummy table :) -----------------"
+			#print "Creating dummy table :) -----------------"
 			
 			if msg.find('1:MASTER') is not -1:
 				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server

@@ -67,7 +67,7 @@ class Storage():
 		#print "getting master"
 		query = 'SELECT ip FROM peer_servers ORDER BY load'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchone()[0]
-		print rows
+		#print rows
 		return rows
 
 	def get_list_of_masters(self):
@@ -118,7 +118,7 @@ class Storage():
 		rows = self.cursor.execute(query).fetchall()
 		new_list = ""
 		i = 0
-		print rows
+		#print rows
 		while(i<len(rows)):
 			if(filekey>rows[i][0]):
 				i += 1
@@ -182,4 +182,4 @@ stor.add_id_server('10.0.0.3',server_id)
 
 '''print stor.get_first_server('10.0.0.2')'''
 
-print stor.get_k_nearest_server("d854e2039a3e27436167f5e1bd2b0544a1fddd7d")
+#print stor.get_k_nearest_server("d854e2039a3e27436167f5e1bd2b0544a1fddd7d")

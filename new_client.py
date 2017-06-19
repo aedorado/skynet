@@ -59,7 +59,9 @@ if args.upload:
 if args.download:
     c = Client()
     print "Downloadin"
-    master = connect_to_persistence("client 1:MASTER")     # to get the ip of a random master
-    print "Master ip ",master
-    #c.download_file('10.0.0.4', '1.mp3')
+    #master = connect_to_persistence("client 1:MASTER")     # to get the ip of a random master
+    #file = c.query_file(args.download,'172.17.14.45')      # put master ip here to get files list
+    #server = connect_to_persistence("client 2:SERVER")
+    target_ip = c.search_pastry('172.17.14.45',file)     # put serverip got from persistence here
+    #c.download_file(target_ip, file)
 

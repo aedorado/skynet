@@ -138,7 +138,9 @@ def slave_thread(bundle):
 				print 'Search Trie'
 				filename = data[data.rfind(':') + 1:]
 				#print message
+				print "filename is : ",filename
 				result_dic = self.Trie_obj.search_get_json(filename) 
+				print "result_dic = ",result_dic
 				message = '21:ACK:' + json.dumps(result_dic)
 				print message
 				print "IN MASTER TRIE QUERY HANDLER"
@@ -211,8 +213,8 @@ class Master :
 		self.last_ip = self.ip
 		self.HOST = self.ip
 
-		print "connecting to persistence in master"
-		self.register_to_persistence()
+		#print "connecting to persistence in master"
+		#self.register_to_persistence()
 
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
@@ -220,6 +222,16 @@ class Master :
 		self.socket_objects = []
 		print "created trie object"
 		self.Trie_obj = Trie.Trie()
+
+		# dummy trie
+		print "creating Dummy trie:"
+		self.Trie_obj.insert("Animal")
+		self.Trie_obj.insert("Animals")
+		self.Trie_obj.insert("Anima")
+		self.Trie_obj.insert("Animl")
+
+		#print self.Trie_obj.search_get_json("Ani")
+
 
 		#bound = self.socket_bind()   #.. there is a definite pattern to accept request
 

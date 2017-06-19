@@ -282,7 +282,7 @@ class Server :
 		self.PEER_HOST = "s"
 		self.PEER_PORT = int(peer_port)
 		self.MASTER_PORT= int(master_port)
-		self.MASTER_HOST = "10.0.0.4"
+		#self.MASTER_HOST = "10.0.0.4"
 		self.PORT_Mapper = port_mapper.PortMap()
 		self.ip = ""                              
 		connection_type = 1
