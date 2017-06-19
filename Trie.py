@@ -25,8 +25,11 @@ class Trie :
 		self.curr_word = filename
 		split_filename_result = self.split_filename(filename[:filename.find('<')])
 
+#		print "Filenames ",split_filename_result
+
 		for each_word in split_filename_result :
 			#each_word = lemmatized word
+			#print "each word is :",each_word
 			self.update(each_word.lower()) # all lower case words
 
 		#print self.trie_root
@@ -36,24 +39,27 @@ class Trie :
 	def update(self, word) :
 		#may be for update and read we should use mutexes in each branch of the tree  ---------->
 		word_length = len(word)
+		#print "word in upation is :",word
 		temp_pointer_root = self.trie_root
 		for char in word :
 			word_length -= 1
-			print char,
+		#	print char,
 
 			if char in temp_pointer_root.branches :
-				print " --> ok"
+			#	print " --> ok"
 				temp_pointer_root = temp_pointer_root.branches[char]
 			else :
-				print " --> not ok"
+			#	print " --> not ok"
 				last_pointer = temp_pointer_root  #parent
 				temp_pointer_root =  MyStruct(ip='127.0.0.1', branches={}, leaf=False, parent = last_pointer, words=[], depth = 0)
 				last_pointer.branches.update({char : temp_pointer_root}) # updating child pointer of parent
 
-			if word_length == 0 : #last charecter
+			temp_pointer_root.words += [self.curr_word]
+
+			#if word_length == 0 : #last charecter
 				#print self.curr_word + 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
-				temp_pointer_root.words += [self.curr_word]
-				print temp_pointer_root.words
+			#	temp_pointer_root.words += [self.curr_word]
+				#print "Collection of words : ",temp_pointer_root.words
 
 		#update weight
 		self.update_weight_bottom_up(word, temp_pointer_root)
@@ -68,7 +74,7 @@ class Trie :
 		# then this tree would not work
 		while parent_updated  :  # either root reached or not required
 			#over here there should be a procedure to shift tree to a new place on the basis of branches and depth ---------->
-			print temp_pointer_root.parent.depth
+		#	print "Depth is :" ,temp_pointer_root.parent.depth
 			
 			if depth > temp_pointer_root.parent.depth : 
 				temp_pointer_root.parent.depth = depth
@@ -139,28 +145,32 @@ class Trie :
 
 
 	def search_get_json(self, filename) :
+		filename = filename.lower()
+		print "Now searching in trie :"
 		# a database stub mongo-db so that we can insert any new word request that comes ----------->
 		split_filename_result = self.split_filename(filename)
 		count = -1
 		result_dic = {}  # this will be used to calculate the rank of the search strings
 
+		#print "file is ",split_filename_result
+
 		for each_word in split_filename_result :
 			#each_word = lemmatized word
 			
 			result = self.lookup(each_word)
-			print result
-			print "------------"
+		#	print result
+		#	print "------------"
 
 			if not result == False :
 				#result_dic.update({each_word:result})
 				for elem in result :
 					count += 1
-					print elem + 'kkk'
-					part1 = elem[:elem.find('<')]
-					part2 = elem[elem.find('>') + 1:]
-					print part1
-					print part2
-					result_dic.update({count : {'filename' : part1, 'ip' :part2}})
+		#			print elem + 'kkk'
+					#part1 = elem[:elem.find('<')]
+					#part2 = elem[elem.find('>') + 1:]
+		#			print part1
+		#			print part2
+					result_dic.update({count : {'filename' : elem}})
 					#print result_dic
 				# result[0] .. contains lookup array of work 1
 				# result[1] .. contains lookup array of work 2
@@ -171,10 +181,12 @@ class Trie :
 
 	def lookup(self, word) :
 		word_length = len(word)
+		print "Lookign up for the wor"
 		temp_pointer_root = self.trie_root
 
 		for char in word :
 			word_length -= 1
+			print "char :",char
 
 			if char in temp_pointer_root.branches :
 				temp_pointer_root = temp_pointer_root.branches[char]
@@ -182,6 +194,7 @@ class Trie :
 				return False
 
 			if word_length == 0 :
+				print "word len is 0", temp_pointer_root.words
 				return temp_pointer_root.words
 
 
