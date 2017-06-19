@@ -14,7 +14,7 @@ def start_listening():
 	#s.bind(('172.26.35.147',11111))
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,11119))
+	s.bind((my_ip,9976))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -101,6 +101,16 @@ def start_listening():
 				except:
 					print 'Error occured'
 					conn.send('Peer Hbeat updation FAILED')	
+			elif msg.find('IP_FROM_ID') is not -1:   
+				id = msg[msg.rfind(':') + 1:]  
+				try:
+					print str(id)
+					ip = stor.get_ip_from_nodeid(str(id))      # updating the time when last ping came from the masters/servers
+					print "ippppp ",ip
+					conn.send(str(ip))
+				except:
+					print 'Error occured'
+					conn.send('return of ip FAILED')	
 			elif msg.find('2:LIST_OF_MASTERS') is not -1:     
 				try:
 					lis = stor.get_list_of_masters()      # updating the time when last ping came from the masters/servers
@@ -123,6 +133,14 @@ def start_listening():
 				except:
 					print 'Error occured'
 					conn.send('Master allocation failed')
+			elif msg.find('K-NEAREST') is not -1:
+				filekey = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
+				try:
+					server_ip = stor.get_k_nearest_server(filekey)
+					conn.send(server_ip)
+				except:
+					print 'Error occured'
+					conn.send('Server allocation failed')
 			elif msg.find('2:SERVER') is not -1:
 				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:

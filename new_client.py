@@ -4,6 +4,7 @@ import argparse
 from Client import Client
 import socket
 import IP
+import hashlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--upload', type=str, help='Upload the specifired file')
@@ -48,8 +49,11 @@ print args.upload
 if args.upload:
     c = Client()
     server = connect_to_persistence("client 2:SERVER")  # 
-    print server
-    c.send_file_to_server(args.upload,str(server))
+    filekey = hashlib.sha1(args.upload).hexdigest()
+    k_peers = connect_to_persistence("client K-NEAREST:"+filekey)
+    k_peers = k_peers.split()
+    for peer in k_peers:
+        c.send_file_to_server(args.upload,peer)    # uploading the file in k nearest neighbours
 
 
 if args.download:

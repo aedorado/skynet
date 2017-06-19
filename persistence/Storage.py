@@ -108,12 +108,46 @@ class Storage():
 		ip = self.cursor.execute(query).fetchone()[0]
 		return ip
 
+	def get_ip_from_nodeid(self,nodeid):
+		query = 'SELECT ip FROM peer_servers where server_id = ?'                 # to get the number of rows present in table 
+		rows = self.cursor.execute(query,(nodeid,)).fetchone()[0]
+		return rows
+
+	def get_k_nearest_server(self,filekey):
+		query = 'SELECT server_id,ip FROM peer_servers ORDER BY server_id'              # to get the number of rows present in table 
+		rows = self.cursor.execute(query).fetchall()
+		new_list = ""
+		i = 0
+		print rows
+		while(i<len(rows)):
+			if(filekey>rows[i][0]):
+				i += 1
+			else:
+				break
+
+		k = 2
+		ind = i
+		while(ind>=0 and k>0):
+			new_list = new_list + " " + rows[ind][1]
+			ind -= 1;
+			k -= 1;
+		
+		ind = i+1
+		k = 2
+		while(ind<len(rows) and k>0):
+			new_list = new_list + " " + rows[ind][1]
+			ind += 1;
+			k -= 1;
+		
+		return new_list
+
+
 	def clean(self):
 		# must remove outdated entries
 		pass
 
 
-'''stor = Storage()
+stor = Storage()
 
 print "Creating dummy table"
 #---------Dummy Table---------
@@ -146,4 +180,6 @@ server_id = hashlib.sha1('10.0.0.3').hexdigest()
 stor.add_id_server('10.0.0.3',server_id)
 #stor.add_load_server('172.31.1.7',4)
 
-print stor.get_first_server('10.0.0.2')'''
+'''print stor.get_first_server('10.0.0.2')'''
+
+print stor.get_k_nearest_server("d854e2039a3e27436167f5e1bd2b0544a1fddd7d")
