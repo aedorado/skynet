@@ -51,6 +51,7 @@ class Storage():
 		self.cursor.execute(query, (self.start_nodeid, add_ip))            # dummy nodeid
 		self.start_nodeid += 96
 		self.conn.commit()
+		return str(self.start_nodeid - 96)
 
 	def get_first_server(self,new_ip):
 		query = 'SELECT ip FROM peer_servers'

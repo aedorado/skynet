@@ -9,7 +9,7 @@ def start_listening():
 	host = socket.gethostname()               # Get local machine name   
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,9935))
+	s.bind((my_ip,9989))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -83,8 +83,8 @@ def start_listening():
 					stor.add_new_server(new_ip)     # new server added
 					status = str(status)
 					server_id = hashlib.sha1(new_ip).hexdigest()        # nodeis from the server ip
-					server_id = str(server_id)
-					stor.add_id_server(new_ip,server_id) #adding id for the server
+					#server_id = str(server_id)
+					server_id = stor.add_id_server(new_ip,server_id) #adding id for the server
 					conn.send(server_id + ":" + status)                     # sending the nodeid to the server
 				except:
 					print 'Error occured'

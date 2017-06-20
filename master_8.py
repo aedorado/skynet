@@ -213,8 +213,8 @@ class Master :
 		self.last_ip = self.ip
 		self.HOST = self.ip
 
-		#print "connecting to persistence in master"
-		#self.register_to_persistence()
+		print "connecting to persistence in master"
+		self.register_to_persistence()
 
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
 		self.CONNECTION_ID = {}   # this has also to be implemented in the same database .. for the ID
@@ -224,11 +224,11 @@ class Master :
 		self.Trie_obj = Trie.Trie()
 
 		# dummy trie
-		print "creating Dummy trie:"
-		self.Trie_obj.insert("Animal<id>4343")
-		self.Trie_obj.insert("Animals<id>4352")
-		self.Trie_obj.insert("Anima<id>768")
-		self.Trie_obj.insert("Animl<id>998")
+		#print "creating Dummy trie:"
+		#self.Trie_obj.insert("Animal<id>4343")
+		#self.Trie_obj.insert("Animals<id>4352")
+		#self.Trie_obj.insert("Anima<id>768")
+		#self.Trie_obj.insert("Animl<id>998")
 
 		#print self.Trie_obj.search_get_json("Ani")
 
@@ -265,7 +265,7 @@ class Master :
 
 		#host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 11112                  # Reserve a port for your service.
+		port = 9998                 # Reserve a port for your service.
 
 		s.connect((host, port))
 
