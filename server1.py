@@ -491,13 +491,13 @@ class Server :
 		#host = '172.17.23.17'
 		
 		# just to show to bibhas sir-----
-		ip_ob = IP.IP()
-		my_ip = ip_ob.get_my_ip()
+		#ip_ob = IP.IP()
+		#my_ip = ip_ob.get_my_ip()
 		#self.ip = my_ip
-		host = my_ip
+		#host = my_ip
 		#---------------------------------
 
-		#host = '172.26.35.147'
+		host = '172.17.14.3'
 		port = 9935                # Reserve a port for your service.
 
 		s.connect((host, port))

@@ -225,10 +225,10 @@ class Master :
 
 		# dummy trie
 		print "creating Dummy trie:"
-		self.Trie_obj.insert("Animal")
-		self.Trie_obj.insert("Animals")
-		self.Trie_obj.insert("Anima")
-		self.Trie_obj.insert("Animl")
+		self.Trie_obj.insert("Animal<id>4343")
+		self.Trie_obj.insert("Animals<id>4352")
+		self.Trie_obj.insert("Anima<id>768")
+		self.Trie_obj.insert("Animl<id>998")
 
 		#print self.Trie_obj.search_get_json("Ani")
 

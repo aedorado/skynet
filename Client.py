@@ -13,7 +13,7 @@ class Client():
 		#---------------------------------
 		#self.MASTER_SERVER_IP = 	# GET from persistance
 		
-		self.MASTER_SERVER_PORT = 2029
+		self.MASTER_SERVER_PORT = 2009
 
 		self.TIER_TWO_SERVER_PORT = 2031
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
@@ -44,7 +44,7 @@ class Client():
 		# except :
 			print 'Unable to connect'
 
-	def send_file_to_server(self, filename, upload_ip):
+	def send_file_to_server(self, filename_key, upload_ip):
 		upload_ip = str(upload_ip)
 		fs = self.get_socket_connection(upload_ip, self.TIER_TWO_SERVER_PORT)
 		fs.sendall('14:Request_FTP_Port')
@@ -55,10 +55,11 @@ class Client():
 		ftp = FTP()
 		ftp.connect(upload_ip, ftp_port)
 		ftp.login()
+		filename = filename_key[:filename_key.rfind('<')]
 		fh = open(filename, 'rb')
 		print 'Uploading ' + filename + '\n'
 		ftp.storbinary('STOR ' + filename, fh)
-		fs.sendall('16:filename:' + filename)
+		fs.sendall('16:filename:' + filename_key)
 		fs.close()
 		print 'Upload sucessful.'
 
@@ -72,6 +73,7 @@ class Client():
 
 
 	def query_file(self, filename,master_ip):
+		filename = filename.lower()
 		print 'Searching for filename: ' + filename
 		master_conn = self.get_socket_connection(master_ip, self.MASTER_SERVER_PORT)
 		master_conn.sendall('20:FILE_QUERY:' + filename)
@@ -81,13 +83,14 @@ class Client():
 		json_result = eval(json_result)
 		print 'We found the following files for you: '
 		for number in json_result.keys():
-			print number + ' : ' + json_result[number]['filename']
-		print '\nEnter the filename'
+			print number + ' : ' + json_result[number]['filename'] 
+		print '\nEnter the filename serial no. :'
 		file_id = raw_input()
-		#print file_id, json_result[file_id]
+		file_id = file_id.lower()
+		#print file_id,"***", json_result[file_id]
 		master_conn.close()
 		#self.download_file(json_result[file_id]['ip'], json_result[file_id]['filename'])
-		return file_id
+		return json_result[file_id]['id']+":"+json_result[file_id]['filename']
 
 	def download_file(self, download_ip, filename):
 		print "Downloading the file :"
@@ -106,14 +109,14 @@ class Client():
 		fs.close()
 		print 'File sucessfully Downloaded.'
 
-	def search_pastry(self,server,filename):
+	'''def search_pastry(self,server,filename):
 		fs = self.get_socket_connection(server, self.TIER_TWO_SERVER_PORT)
 		filekey = ?????
 		fs.sendall('22:Request_the_target :'+filekey)
 		target_ip = fs.recv(1024)
 		fs.close()
 		return target_ip
-
+'''
 
 
 	

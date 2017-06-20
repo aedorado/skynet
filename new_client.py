@@ -48,20 +48,26 @@ print args.upload
 
 if args.upload:
     c = Client()
-    server = connect_to_persistence("client 2:SERVER")  # 
-    filekey = hashlib.sha1(args.upload).hexdigest()
+    msg = connect_to_persistence("client 2:SERVER2")  # 
+    #filekey = hashlib.sha1(args.upload).hexdigest()
+    server = msg[:msg.rfind(':')]
+    filekey = msg[msg.rfind(':')+1:]
     k_peers = connect_to_persistence("client K-NEAREST:"+filekey)
     k_peers = k_peers.split()
     for peer in k_peers:
-        c.send_file_to_server(args.upload,peer)    # uploading the file in k nearest neighbours
+        c.send_file_to_server(args.upload+"<key>"+filekey,peer)    # uploading the file in k nearest neighbours
 
 
 if args.download:
     c = Client()
-    print "Downloadin"
+    file = args.download
+    print "Downloading : ",file
     #master = connect_to_persistence("client 1:MASTER")     # to get the ip of a random master
-    #file = c.query_file(args.download,'172.17.14.45')      # put master ip here to get files list
-    #server = connect_to_persistence("client 2:SERVER")
-    target_ip = c.search_pastry('172.17.14.45',file)     # put serverip got from persistence here
-    #c.download_file(target_ip, file)
+    msg = c.query_file(file,'172.17.14.3')      # put master ip here to get files list
+    filename = msg[msg.rfind(':')+1:]
+    file_id = msg[:msg.rfind(':')]
+    print "Filekey to download : ",file_id,"-- file name = ",filename
+    #server = connect_to_persistence("client 2:SERVER1")
+    #target_ip = c.search_pastry('172.17.14.45',file_id)     # put serverip got from persistence here
+    #c.download_file(target_ip, filename)
 

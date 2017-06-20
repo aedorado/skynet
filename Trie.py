@@ -25,11 +25,12 @@ class Trie :
 		self.curr_word = filename
 		split_filename_result = self.split_filename(filename[:filename.find('<')])
 
-#		print "Filenames ",split_filename_result
+		print "Filenames ",split_filename_result
 
 		for each_word in split_filename_result :
+			
 			#each_word = lemmatized word
-			#print "each word is :",each_word
+			print "each word is :",each_word
 			self.update(each_word.lower()) # all lower case words
 
 		#print self.trie_root
@@ -54,7 +55,7 @@ class Trie :
 				temp_pointer_root =  MyStruct(ip='127.0.0.1', branches={}, leaf=False, parent = last_pointer, words=[], depth = 0)
 				last_pointer.branches.update({char : temp_pointer_root}) # updating child pointer of parent
 
-			temp_pointer_root.words += [self.curr_word]
+			temp_pointer_root.words += [self.curr_word.lower()]
 
 			#if word_length == 0 : #last charecter
 				#print self.curr_word + 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk'
@@ -166,15 +167,10 @@ class Trie :
 				for elem in result :
 					count += 1
 		#			print elem + 'kkk'
-					#part1 = elem[:elem.find('<')]
-					#part2 = elem[elem.find('>') + 1:]
-		#			print part1
-		#			print part2
-					result_dic.update({count : {'filename' : elem}})
-					#print result_dic
-				# result[0] .. contains lookup array of work 1
-				# result[1] .. contains lookup array of work 2
-
+					part1 = elem[:elem.find('<')]
+					part2 = elem[elem.find('>') + 1:]
+					result_dic.update({count : {'filename' : part1, 'id' :part2}})
+					#result_dic.update({count : {'filename' : elem}})
 		return result_dic
 
 
@@ -209,7 +205,7 @@ class Trie :
 
 
 def main() :
-	argv = sys.argv
+	'''argv = sys.argv
 	file = argv[1]
 
 	print "testng"
@@ -234,6 +230,13 @@ def main() :
 	print "Searching : deep : ",
 	result = t_obj.search_get_json("deep")
 	print result
+'''
+	t_obj = Trie()
+	t_obj.insert("Kritika.py<id>3434")
+	t_obj.insert("Kritka.py<id>3434")
+	t_obj.insert("Kritikas.py<id>3434")
+	t_obj.insert("Kritikkka.py<id>3434")
+	t_obj.search_get_json("Kriti.py")
 
 if __name__ == "__main__" :
 	main()

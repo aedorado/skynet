@@ -10,6 +10,8 @@ class Storage():
 	def __init__(self):
 		os.remove('master.db')              # to delete the already created database
 		self.conn = db.connect('master.db')
+		self.start_nodeid = 1146            # start nodeid for peers
+		self.start_filekey = 1146
 		self.cursor = self.conn.cursor()
 		self.cursor.execute('CREATE TABLE master_servers (master_id ,ip, timestamp)')       # table for masters
 		self.cursor.execute('CREATE TABLE peer_servers (server_id ,ip, timestamp, load)')   # table for servers
@@ -45,7 +47,9 @@ class Storage():
 		query = 'SELECT COUNT(*) FROM peer_servers'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE peer_servers SET server_id=? WHERE ip=?'
-		self.cursor.execute(query, (server_id, add_ip))
+		#self.cursor.execute(query, (server_id, add_ip))           # nodeid using hashlib
+		self.cursor.execute(query, (self.start_nodeid, add_ip))            # dummy nodeid
+		self.start_nodeid += 96
 		self.conn.commit()
 
 	def get_first_server(self,new_ip):
@@ -96,7 +100,7 @@ class Storage():
 		query = 'SELECT COUNT(*) FROM master_servers'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchone()[0]
 		query = 'UPDATE master_servers SET master_id=? WHERE ip=?'
-		self.cursor.execute(query, (master_id, add_ip))
+		self.cursor.execute(query, ("100", add_ip))
 		self.conn.commit()
 
 	def get_master(self):
@@ -112,6 +116,11 @@ class Storage():
 		query = 'SELECT ip FROM peer_servers where server_id = ?'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query,(nodeid,)).fetchone()[0]
 		return rows
+
+	def get_filekey(self):
+		self.start_filekey += 48
+		key = self.start_filekey
+		return str*=(key)
 
 	def get_k_nearest_server(self,filekey):
 		query = 'SELECT server_id,ip FROM peer_servers ORDER BY server_id'              # to get the number of rows present in table 
