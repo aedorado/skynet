@@ -120,7 +120,7 @@ class Storage():
 	def get_filekey(self):
 		self.start_filekey += 48
 		key = self.start_filekey
-		return str*=(key)
+		return str(key)
 
 	def get_k_nearest_server(self,filekey):
 		query = 'SELECT server_id,ip FROM peer_servers ORDER BY server_id'              # to get the number of rows present in table 
