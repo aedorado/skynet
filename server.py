@@ -14,6 +14,7 @@ import Find_IP
 import hashlib
 import Trie
 import difflib
+import bisect
 
 import FileServer
 
@@ -378,6 +379,13 @@ def peer_back_process(bundle):
 					self.routing.append(["NULL"]*5)
 				self.routing[int(step)][char_to_int[peer_nodeid[int(step)]]] = peer_nodeid   # updating the routing table of cuurent node with the joining peer id
 				
+				print "Updating leaf set with peer having match of : ",step
+				bisect.insort(self.leaf,peer_nodeid)
+				if(self.nodeid > peer_nodeid):
+					self.leaf = self.leaf[1:]
+				else:
+					self.leaf = self.leaf[:-1]
+
 				print "Table after updation"
 				for i in range(0,len(self.routing)):
 					for j in range(0,len(self.routing[i])):
@@ -481,8 +489,7 @@ class Server :
 			try:
 				data = Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":0",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
 				# decoding the received data after the search process done
-				print "Received data :"
-				print data
+				print "Decoding the data :"
 
 			except Exception, errtxt:
 				print errtxt
