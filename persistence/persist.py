@@ -9,7 +9,7 @@ def start_listening():
 	host = socket.gethostname()               # Get local machine name   
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,9989))
+	s.bind((my_ip,9999))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once

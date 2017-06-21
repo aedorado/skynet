@@ -223,7 +223,7 @@ def get_masters_from_persistence(message):
 	host = my_ip
 	#---------------------------------
 
-	port = 9989                 # Reserve a port for your service.
+	port = 9999                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -316,6 +316,9 @@ def peer_back_process(bundle):
 			peer_nodeid = data[data.rfind('>') + 1:data.rfind(':')]
 
 			step = data[data.rfind(':') + 1:]          # step to know which row of 
+
+			if(step is "-1"):
+				step = self.number_of_matching_digits(peer_nodeid)
 														 # its routing table to be returned
 			step_next = str(int(step) + 1)
 
@@ -372,6 +375,7 @@ def peer_back_process(bundle):
 						print "getting the neight"	
 						for neig in self.neighbour:
 								message = message + " " +  neig
+					message = message + "@"+step
 
 				print "Updating the Routing table with peer having match of : ",step
 				curr_size = len(self.routing)
@@ -483,13 +487,56 @@ class Server :
 
 		self.register_to_persistence()
 
-		if self.A_server.find('0') is not -1 :                         # decide this condition of master selection later
+		if self.A_server is "0" :                         # decide this condition of master selection later
 			print "I am the first peer in the network"
 		else:	
 			try:
-				data = Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":0",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
+				msg = Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":-1",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
 				# decoding the received data after the search process done
 				print "Decoding the data :"
+				leaf = msg[msg.rfind('&')+1:msg.rfind('#')]
+
+				leaf = leaf.strip()
+				self.leaf = leaf.split()
+				print "leaf is : ",self.leaf
+
+				nei = msg[msg.rfind('$')+1:msg.rfind('@')]
+				nei = nei.split()
+				print "Neighbour is : ", self.neighbour
+
+				step = msg[msg.rfind('@')+1:]
+				step = int(step)
+
+				routing = msg[msg.rfind('#')+1:msg.rfind('$')]
+				routing = routing.strip()
+				routing = routing.split('Routing')
+
+				nodes_on_path = []
+				self.routing = []
+				for i in range(0,step):
+					self.routing.append(["NULL"]*5)
+
+				for i in range(1,len(routing)):
+					x = routing[i].strip()
+					row = x[:x.rfind('^')].strip()
+					node = x[x.rfind('^')+1:].strip()
+					nodes_on_path.append(node)
+					entries = row.split()
+					self.routing.append(entries)
+					#print "hey ",i+1
+					#print node, " ",row," ",entries
+				
+				print "Routing table : "
+				print self.routing		
+
+				print "Updating the leaf set :"
+				for node in nodes_on_path:
+					bisect.insort(self.leaf,node)
+					if(self.nodeid > node):
+						self.leaf = self.leaf[1:]
+					else:
+						self.leaf = self.leaf[:-1]
+
 
 			except Exception, errtxt:
 				print errtxt
@@ -497,7 +544,16 @@ class Server :
 		self.bind_and_serve()                 # communication with peers and clients after server creation
 		
 		print 'Super Outside'
-		
+
+	def number_of_matching_digits(self,peer_nodeid):
+		i = 0;
+		l1 = len(self.nodeid)
+		l2 = len(peer_nodeid)
+		while(i>min(l1,l2)):
+			if(self.nodeid[i]!=peer_nodeid[i]):
+				break
+			i += 1
+		return i	
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
@@ -511,7 +567,7 @@ class Server :
 		#---------------------------------
 
 		#host = '172.26.35.147'
-		port = 9989                # Reserve a port for your service.
+		port = 9999                # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -521,7 +577,7 @@ class Server :
 
 		msg = s.recv(1024)
 		self.nodeid = msg[:msg.rfind(':')]
-		self.A_server = msg[msg.rfind(':')  + 1:]
+		self.A_server = msg[msg.rfind(':')  + 1:]     # ip of A server
 		print msg
 
 		s.close()
