@@ -76,7 +76,7 @@ class Storage():
 		return rows
 
 	def get_list_of_masters(self):
-		query = 'SELECT ip FROM peer_servers'                 # to get the number of rows present in table 
+		query = 'SELECT ip FROM master_servers'                 # to get the number of rows present in table 
 		rows = self.cursor.execute(query).fetchall()
 		new_list = ""
 		for i in rows:
@@ -135,6 +135,11 @@ class Storage():
 			else:
 				break
 
+		if(i>=len(rows)):
+			i -= 1
+
+		print rows
+		print i
 		k = 2
 		ind = i
 		while(ind>=0 and k>0):
@@ -156,14 +161,26 @@ class Storage():
 		# must remove outdated entries
 		pass
 
-
+'''
 stor = Storage()
 
 print "Creating dummy table"
 #---------Dummy Table---------
-stor.add_new_server('10.0.0.9')
-server_id = hashlib.sha1('10.0.0.9').hexdigest()
-stor.add_id_server('10.0.0.9',server_id)
+stor.add_new_server('172.17.14.23')
+#server_id = hashlib.sha1('172.17.14.23').hexdigest()
+stor.add_id_server('172.17.14.23','1146')
+stor.add_new_server('172.17.14.24')
+#server_id = hashlib.sha1('172.17.14.23').hexdigest()
+stor.add_id_server('172.17.14.24','1178')
+stor.add_new_server('172.17.14.25')
+#server_id = hashlib.sha1('172.17.14.23').hexdigest()
+stor.add_id_server('172.17.14.25','1141')
+stor.add_new_server('172.17.14.26')
+#server_id = hashlib.sha1('172.17.14.23').hexdigest()
+stor.add_id_server('172.17.14.26','1197')
+stor.add_new_server('172.17.14.27')
+#server_id = hashlib.sha1('172.17.14.23').hexdigest()
+stor.add_id_server('172.17.14.27','2000')
 #stor.add_load_server('172.31.1.1',4)
 stor.add_new_server('10.0.0.5')
 server_id = hashlib.sha1('10.0.0.5').hexdigest()
@@ -189,7 +206,8 @@ stor.add_new_server('10.0.0.3')
 server_id = hashlib.sha1('10.0.0.3').hexdigest()
 stor.add_id_server('10.0.0.3',server_id)
 #stor.add_load_server('172.31.1.7',4)
+'''
 
 '''print stor.get_first_server('10.0.0.2')'''
 
-#print stor.get_k_nearest_server("d854e2039a3e27436167f5e1bd2b0544a1fddd7d")
+#print stor.get_k_nearest_server("1194")

@@ -24,7 +24,7 @@ def update_trie(self, filename,master_ip) :
 
 	print filename
 	print self.MASTER_HOST
-	self.MASTER_PORT = 2034
+	self.MASTER_PORT = 3057    # jo server me last port he wo
 
 	while True :
 		try :

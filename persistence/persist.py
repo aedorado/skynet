@@ -9,7 +9,7 @@ def start_listening():
 	host = socket.gethostname()               # Get local machine name   
 	ip_ob = IP.IP()
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,9999))
+	s.bind((my_ip,9978))
 	s.listen(10)
 
 	stor = Storage()                          # database will be created only once
@@ -126,7 +126,7 @@ def start_listening():
 					#print "got ip",master_ip
 					conn.send('Master ip:'+master_ip)
 				except:
-					print 'Error occured'
+					print 'Error occured master ip'
 					conn.send('Master allocation failed')
 			elif msg.find('K-NEAREST') is not -1:
 				filekey = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
@@ -134,16 +134,16 @@ def start_listening():
 					server_ip = stor.get_k_nearest_server(filekey)
 					conn.send(server_ip)
 				except:
-					print 'Error occured'
-					conn.send('Server allocation failed')
+					print 'Error occured k nearest failed'
+					conn.send('K nearest allocation failed')
 			elif msg.find('2:SERVER1') is not -1:
 				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:
 					server_ip = stor.get_server()
 					conn.send(server_ip)
 				except:
-					print 'Error occured'
-					conn.send('Server allocation failed')
+					print 'Error : get server failed'
+					conn.send('get server failed')
 			elif msg.find('2:SERVER2') is not -1:
 				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:
@@ -151,12 +151,13 @@ def start_listening():
 					key = stor.get_filekey()
 					conn.send(server_ip+":"+key)
 				except:
-					print 'Error occured'
-					conn.send('Server allocation failed')
+					print 'server allocation failed'
+					conn.send('get filekey allocation failed')
 				pass
 		# to add the function for updating the load of ther servers
 
 
 if __name__ == "__main__":
+
 	start_listening()
 

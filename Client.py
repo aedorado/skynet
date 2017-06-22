@@ -13,9 +13,9 @@ class Client():
 		#---------------------------------
 		#self.MASTER_SERVER_IP = 	# GET from persistance
 		
-		self.MASTER_SERVER_PORT = 2009
+		self.MASTER_SERVER_PORT = 4077
 
-		self.TIER_TWO_SERVER_PORT = 2031
+		self.TIER_TWO_SERVER_PORT = 4071    # first port put in case of server.py
 		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
 		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
@@ -37,7 +37,9 @@ class Client():
 		if True:
 			sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			print "socket created"
-			sock_conn.connect((ip_address, port))
+			#print "Now connecting to : ",ip_address," && ",port
+			sock_conn.connect((str(ip_address), int(port)))
+			#sock_conn.connect(('172.17.14.2',4034))
 			#sock_conn.connect(('172.26.35.147', 2039))
 			print 'Success\n'
 			return sock_conn
@@ -119,4 +121,6 @@ class Client():
 '''
 
 
+#c = Client()
+#sc = c.get_socket_connection('172.17.14.2',4034)
 	

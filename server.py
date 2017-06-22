@@ -15,6 +15,8 @@ import hashlib
 import Trie
 import difflib
 import bisect
+import Queue
+import threading
 
 import FileServer
 
@@ -223,7 +225,7 @@ def get_masters_from_persistence(message):
 	host = my_ip
 	#---------------------------------
 
-	port = 9999                 # Reserve a port for your service.
+	port = 9983                 # Reserve a port for your service.
 
 	s.connect((host, port))
 	print "connected server to persis to get master"
@@ -262,9 +264,13 @@ def client_back_process(self,conn,filekey,step):
 				try:                                # to forward the request to the next peer
 					print "forwarding the request to ",closest_peer
 	
-					## ------------- find closest_peer's ip using routingtable and leaf set ???--------- 
-					message = Thread(target=self.client_front_process, args=(filekey,closest_peer)).start()     
-					
+					## ------------- find closest_peer's ip using routingtable and leaf set ???---------
+					queue = Queue.Queue() 
+					thread_ = Thread(target=self.client_front_process, args=(filekey,closest_peer,queue))
+					thread_.start()     
+					thread_.join()
+					message = queue.get()
+
 				except Exception, errtxt:
 					print errtxt
 
@@ -317,9 +323,11 @@ def peer_back_process(bundle):
 
 			step = data[data.rfind(':') + 1:]          # step to know which row of 
 
-			if(step is "-1"):
+			if(step == "-1"):
 				step = self.number_of_matching_digits(peer_nodeid)
+				print "Now step is : ",step
 														 # its routing table to be returned
+			print "^^ ",step 
 			step_next = str(int(step) + 1)
 
 			if data.find("REQUEST") is not -1:
@@ -343,26 +351,31 @@ def peer_back_process(bundle):
 						print "msg to send :",msg_to_send
 						print "closest peer :",closest_peer
 						## ------------- find closest_peer's ip using routingtable and leaf set ???--------- 
-						message = Thread(target=self.peer_front_process, args=(msg_to_send,closest_peer)).start()     
-						#message = message + " ^"
-						#for cols in self.routing[int(step)]:       # send the row of intermediate routing table
-						#	message = message + " " + cols
+
+						queue = Queue.Queue()
+						thread_ = threading.Thread(target=self.peer_front_process, args=(msg_to_send,closest_peer,queue))
+						thread_.start()     # Separate thread to accept the incoming connections from tier 2 peers
+						thread_.join()
+						message = queue.get()
 					except Exception, errtxt:
 						print errtxt
 
 				else:
 					print "sending back the leaves"
 
-					if(len(self.leaf) > 0):
-						message = message + "&"
-						for lf in self.leaf:                  # sending leaf set back from the Z node
-							message = message + " " + lf
-						message = message + " #"
+					
+					message = message + "&"
+					for lf in self.leaf:                  # sending leaf set back from the Z node
+						message = message + " " + lf
+					message = message + " #"
 
 				print "sendinf the routing table rows"
-				#print len(self.routing)," ",int(step)
+				print len(self.routing)," ",int(step)
 				message = message + "Routing "
+				#print "ey uu ",step
+
 				if(len(self.routing) > int(step)):
+				#	print ":) :) "
 					#message = message + " ROUTING: ^"
 					for cols in self.routing[int(step)]:
 						message = message + " " + cols	
@@ -375,7 +388,7 @@ def peer_back_process(bundle):
 						print "getting the neight"	
 						for neig in self.neighbour:
 								message = message + " " +  neig
-					message = message + "@"+step
+					message = message + "@"+str(step)
 
 				print "Updating the Routing table with peer having match of : ",step
 				curr_size = len(self.routing)
@@ -491,9 +504,12 @@ class Server :
 			print "I am the first peer in the network"
 		else:	
 			try:
-				msg = Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":-1",self.A_server)).start()     # Separate thread to accept the incoming connections from tier 2 peers
-				# decoding the received data after the search process done
-				print "Decoding the data :"
+				queue = Queue.Queue()
+				thread_ = threading.Thread(target=self.peer_front_process, args=("REQUEST START<id>" +self.nodeid + ":-1",self.A_server,queue))
+				thread_.start()     # Separate thread to accept the incoming connections from tier 2 peers
+				thread_.join()
+				msg = queue.get()
+				print "Decoding the data : ",msg
 				leaf = msg[msg.rfind('&')+1:msg.rfind('#')]
 
 				leaf = leaf.strip()
@@ -532,10 +548,14 @@ class Server :
 				print "Updating the leaf set :"
 				for node in nodes_on_path:
 					bisect.insort(self.leaf,node)
-					if(self.nodeid > node):
-						self.leaf = self.leaf[1:]
-					else:
-						self.leaf = self.leaf[:-1]
+					if(len(self.leaf) > 4):              # taking size of leaf set to be 4
+ 						if(self.nodeid > node):
+							self.leaf = self.leaf[1:]
+						else:
+							self.leaf = self.leaf[:-1]
+
+				print "Leaf set after updation :"
+				print self.leaf
 
 
 			except Exception, errtxt:
@@ -553,7 +573,7 @@ class Server :
 			if(self.nodeid[i]!=peer_nodeid[i]):
 				break
 			i += 1
-		return i	
+		return str(i)	
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
@@ -567,7 +587,7 @@ class Server :
 		#---------------------------------
 
 		#host = '172.26.35.147'
-		port = 9999                # Reserve a port for your service.
+		port = 9983                # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -599,7 +619,7 @@ class Server :
 		return "NULL"
 
 
-	def peer_front_process(self,msg_to_send,closest_peer_ip) :
+	def peer_front_process(self,msg_to_send,closest_peer_ip,queue) :
 		data = ""
 		print "Forwarding the message to the closest peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -625,10 +645,10 @@ class Server :
 				break
 
 		data = self.soc_conn_peer.recv(4096)
+		queue.put(data)
 		self.soc_conn_peer.close()
-		return data
 
-	def client_front_process(self,msg_to_send,closest_peer_ip) :
+	def client_front_process(self,msg_to_send,closest_peer_ip,queue) :
 		data = ""
 		print "Forwarding the message to the closest peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -655,7 +675,7 @@ class Server :
 
 		data = self.soc_conn_peer.recv(4096)
 		self.soc_conn_peer.close()
-		return data
+		queue.put(data)
 
 
 	def peer_back_thread(self):

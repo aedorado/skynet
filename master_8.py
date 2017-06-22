@@ -265,7 +265,7 @@ class Master :
 
 		#host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 9998                 # Reserve a port for your service.
+		port = 9978                 # Reserve a port for your service.
 
 		s.connect((host, port))
 
@@ -281,7 +281,7 @@ class Master :
 
 	def bind_and_serve(self):
 		self.socket_objects += [socket.socket(socket.AF_INET, socket.SOCK_STREAM)]
-		print 'Socket created   .... master'
+		print 'Socket created   .... master at',self.PORT
 		print self.PORT
 
 		while True :
