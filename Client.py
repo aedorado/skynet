@@ -2,26 +2,20 @@ import socket
 from ftplib import FTP
 import IP
 
+mast_port = 5011
+serv_port = 5012
+
+
 class Client():
 
 	def __init__(self):
-		# just to show to bibhas sir-----
 		ip_ob = IP.IP()
 		my_ip = ip_ob.get_my_ip()
-		#self.ip = my_ip
-		self.MASTER_SERVER_IP = my_ip
-		#---------------------------------
-		#self.MASTER_SERVER_IP = 	# GET from persistance
-		
-		self.MASTER_SERVER_PORT = 4077
+		self.MASTER_SERVER_IP = my_ip              # put ip of master server here manually 
+		self.MASTER_SERVER_PORT = mast_port
+		self.TIER_TWO_SERVER_PORT = serv_port           # first port put in case of running of server.py
 
-		self.TIER_TWO_SERVER_PORT = 4071    # first port put in case of server.py
-		# self.master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
-		#self.TIER_TWO_SERVER_ADD = self.get_tier_two_ip()
-		# self.tier_2_conn = self.get_socket_connection(self.TIER_TWO_SERVER_ADD, self.TIER_TWO_SERVER_PORT)
-		# self.TIER_TWO_SERVER_PORT = 10619
-
-	def get_tier_two_ip(self):
+	'''def get_tier_two_ip(self):
 		print 'Requesting Tier 2 IP'
 		master_conn = self.get_socket_connection(self.MASTER_SERVER_IP, self.MASTER_SERVER_PORT)
 		master_conn.sendall('5:REQUEST_TIER_2_ADDRESS:')
@@ -30,21 +24,16 @@ class Client():
 		print 'Success Tier 2 ip is : ' + t2ip + '\n' 
 		return t2ip
 		master_conn.close()
+	'''
 
 	def get_socket_connection(self, ip_address, port):
 		print 'Attempting connection to ' + ip_address + ' on port ' + str(port)
-		# try :
 		if True:
 			sock_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			print "socket created"
-			#print "Now connecting to : ",ip_address," && ",port
 			sock_conn.connect((str(ip_address), int(port)))
-			#sock_conn.connect(('172.17.14.2',4034))
-			#sock_conn.connect(('172.26.35.147', 2039))
 			print 'Success\n'
 			return sock_conn
-		# except :
-			print 'Unable to connect'
 
 	def send_file_to_server(self, filename_key, upload_ip):
 		upload_ip = str(upload_ip)
@@ -52,6 +41,7 @@ class Client():
 		fs.sendall('14:Request_FTP_Port')
 		print 'FTP port request sent'
 		ftp_port = fs.recv(1024)
+		print "checking " ,ftp_port
 		ftp_port = ftp_port[ftp_port.rfind(':') + 1:]
 		print 'FTP port received : ' + str(ftp_port)
 		ftp = FTP()
@@ -66,15 +56,7 @@ class Client():
 		print 'Upload sucessful.'
 
 
-	#def upload_file(self, filename,server_ip):
-	#	print 'Requesting upload ip///////////////////**********'
-	#	tier_2_conn = self.get_socket_connection(server_ip, self.TIER_TWO_SERVER_PORT)   # connecting to the ip of server 
-		#print "hey"																		 # received from the persistence module 
-	#	self.send_file_to_server(filename,server_ip)    #  sending file to the server 
-	#	tier_2_conn.close()
-
-
-	def query_file(self, filename,master_ip):
+	def query_file(self, filename, master_ip):
 		filename = filename.lower()
 		print 'Searching for filename: ' + filename
 		master_conn = self.get_socket_connection(master_ip, self.MASTER_SERVER_PORT)
@@ -89,10 +71,9 @@ class Client():
 		print '\nEnter the filename serial no. :'
 		file_id = raw_input()
 		file_id = file_id.lower()
-		#print file_id,"***", json_result[file_id]
 		master_conn.close()
-		#self.download_file(json_result[file_id]['ip'], json_result[file_id]['filename'])
 		return json_result[file_id]['id']+":"+json_result[file_id]['filename']
+
 
 	def download_file(self, download_ip, filename):
 		print "Downloading the file :"
@@ -111,16 +92,12 @@ class Client():
 		fs.close()
 		print 'File sucessfully Downloaded.'
 
-	'''def search_pastry(self,server,filename):
+	def search_pastry(self,server,filekey):
 		fs = self.get_socket_connection(server, self.TIER_TWO_SERVER_PORT)
-		filekey = ?????
+		print "Requesing the file with filekey : ",filekey
 		fs.sendall('22:Request_the_target :'+filekey)
 		target_ip = fs.recv(1024)
+		print "testing arget ",target_ip
 		fs.close()
 		return target_ip
-'''
-
-
-#c = Client()
-#sc = c.get_socket_connection('172.17.14.2',4034)
 	

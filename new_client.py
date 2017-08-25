@@ -1,10 +1,12 @@
-# 172.19.17.189:10611
 
 import argparse
 from Client import Client
 import socket
 import IP
 import hashlib
+
+persist_port = 9996                     # set port where persistence is listening
+persist_ip = '172.20.52.8'              # set ip of persistence
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--upload', type=str, help='Upload the specifired file')
@@ -21,15 +23,9 @@ parser.add_argument(
 
 def connect_to_persistence(message):
     s = socket.socket()             # Create a socket object
-    #host = '172.17.23.17'
-    # just to show to bibhas sir-----
-    ip_ob = IP.IP()
-    my_ip = ip_ob.get_my_ip()
-    host = my_ip
     
-    #---------------------------------
-    #host = '172.26.35.147'
-    port = 9977                # Reserve a port for your service.
+    host = persist_ip
+    port = persist_port
 
     s.connect((host, port))
     print "connected to persis"
@@ -48,8 +44,9 @@ print args.upload
 
 if args.upload:
     c = Client()
+    #c.send_file_to_server(args.upload+"<key>"+'567','172.17.14.23')
     msg = connect_to_persistence("client 2:SERVER2")  # 
-    #filekey = hashlib.sha1(args.upload).hexdigest()
+   # filekey = hashlib.sha1(args.upload).hexdigest()
     server = msg[:msg.rfind(':')]
     filekey = msg[msg.rfind(':')+1:]
     print server," --",filekey
@@ -69,7 +66,8 @@ if args.download:
     filename = msg[msg.rfind(':')+1:]
     file_id = msg[:msg.rfind(':')]
     print "Filekey to download : ",file_id,"-- file name = ",filename
-   # server = connect_to_persistence("client 2:SERVER1")
-   # target_ip = c.search_pastry(server,file_id)     # put serverip got from persistence here
-   # c.download_file(target_ip, filename)
+    server = connect_to_persistence("client 2:SERVER1")
+    target_ip = c.search_pastry(server,file_id)     # put serverip got from persistence here
+    print "Target ip is :",target_ip
+    c.download_file(target_ip, filename)
 

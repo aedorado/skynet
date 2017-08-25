@@ -31,11 +31,6 @@ class FileServer:
         print "process running:"
         self.server_proc = Process(target=self.server.serve_forever)
         self.server_proc.start()
-        #self.server_proc.join()
-        '''try:
-            Thread(target=self.server.serve_forever, args=()).start()
-        except Exception, errtxt:
-            print errtxt'''
         self.is_running = True 
 
     def stopServer(self):
