@@ -638,7 +638,7 @@ class Server :
 
 	def peer_front_process(self,msg_to_send,closest_peer_ip,queue) :
 		data = ""
-		print "Forwarding the message to the closest peer"
+		print "Forwarding the message to the closest peer for peer"
 		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		while True :
@@ -646,7 +646,7 @@ class Server :
 				print "closest peer is : ",closest_peer_ip
 				self.soc_conn_peer.connect((closest_peer_ip, self.PEER_BACKWARD_PORT))
 			except :
-				print 'Unable to connect. Retrying after 100 millisecinds ..'
+				print 'Unable to connect. Retrying  after 100 millisecinds ..'
 				time.sleep(0.1)
 				continue
 			finally :
@@ -667,15 +667,15 @@ class Server :
 
 	def client_front_process(self,msg_to_send,closest_peer_ip,queue) :
 		data = ""
-		print "Forwarding the message to the closest peer"
-		self.soc_conn_peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print "Forwarding the message for client  to the closest peer "
+		self.soc_conn_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		while True :
 			try :
-				print "closest peer is : ",closest_peer_ip
-				self.soc_conn_peer.connect((closest_peer_ip, self.CLIENT_BACKWARD_PORT))
+				print "closest peer for client is : ",closest_peer_ip
+				self.soc_conn_client.connect((closest_peer_ip, self.CLIENT_BACKWARD_PORT))
 			except :
-				print 'Unable to connect. Retrying after 100 millisecinds ..'
+				print 'Unable to connect. Retrying (client) after 100 millisecinds ..'
 				time.sleep(0.1)
 				continue
 			finally :
@@ -683,16 +683,16 @@ class Server :
 
 		while True :
 			try :
-				self.soc_conn_peer.sendall(msg_to_send)
+				self.soc_conn_client.sendall(msg_to_send)
 			except socket.error:
 				print 'Send failed client' 
 				continue
 			finally :
 				break
 
-		data = self.soc_conn_peer.recv(4096)
+		data = self.soc_conn_client.recv(4096)
 		queue.put(data)
-		self.soc_conn_peer.close()
+		self.soc_conn_client.close()
 
 
 	def peer_back_thread(self):
