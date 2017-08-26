@@ -19,7 +19,7 @@ import Queue
 import threading
 import FileServer
 
-persist_port = 9994                   # set port where persistence is listening
+persist_port = 9996                   # set port where persistence is listening
 persist_ip = '172.20.52.8'             # set ip of persistence
 master_ip1 = '172.20.52.8'              # set ip of master
 files_path = '/home/placements2018/Music'
@@ -419,6 +419,7 @@ def peer_back_process(bundle):
 					self.leaf = self.leaf[1:]
 				else:
 					self.leaf = self.leaf[:-1]
+				print "Leaf set after updation ",self.leaf
 
 				print "Table after updation"
 				for i in range(0,len(self.routing)):
