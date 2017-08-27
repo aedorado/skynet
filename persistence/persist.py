@@ -2,18 +2,20 @@ import socket
 from Storage import Storage
 import sqlite3 as db
 import IP
-import hashlib # library for sha1 hashing
+import hashlib      # library for sha1 hashing
+
+curr_port = 9996
 
 def start_listening():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	host = socket.gethostname()               # Get local machine name   
-	ip_ob = IP.IP()
+	host = socket.gethostname()               
+	ip_ob = IP.IP()                           # Get the ip of the system (machine_ip for persistence)
 	my_ip = ip_ob.get_my_ip()
-	s.bind((my_ip,9978))
+	s.bind((my_ip,curr_port))                      #  select a port for binding
 	s.listen(10)
 
+	print "Ip of persistence is : ",my_ip
 	stor = Storage()                          # database will be created only once
-
 
 	print "Creating dummy table"
 	#---------Dummy Table---------
@@ -53,7 +55,6 @@ def start_listening():
 		print msg
 		new_ip = addr[0]                 # ip from the addr recieved after connection of master/server
 		if msg.find("master") is not -1:
-			#print "master detected"
 			if msg.find('1:JOIN') is not -1:
 				try:
 					A_server = stor.get_first_server(new_ip)
@@ -116,14 +117,9 @@ def start_listening():
 				pass
 		elif msg.find("client") is not -1:
 			print "client detected"
-			#print "Creating dummy table :) -----------------"
-			
 			if msg.find('1:MASTER') is not -1:
-				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:
-					#master_ip =  "heuuooo"
 					master_ip = stor.get_master()
-					#print "got ip",master_ip
 					conn.send('Master ip:'+master_ip)
 				except:
 					print 'Error occured master ip'
@@ -136,8 +132,7 @@ def start_listening():
 				except:
 					print 'Error occured k nearest failed'
 					conn.send('K nearest allocation failed')
-			elif msg.find('2:SERVER1') is not -1:
-				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
+			elif msg.find('2:SERVER1') is not -1:        # to get the server with least load
 				try:
 					server_ip = stor.get_server()
 					conn.send(server_ip)
@@ -145,7 +140,6 @@ def start_listening():
 					print 'Error : get server failed'
 					conn.send('get server failed')
 			elif msg.find('2:SERVER2') is not -1:
-				#client_ip = msg[msg.rfind(':') + 1:]       #recieved  client_ip from the server
 				try:
 					server_ip = stor.get_server()
 					key = stor.get_filekey()
@@ -154,7 +148,6 @@ def start_listening():
 					print 'server allocation failed'
 					conn.send('get filekey allocation failed')
 				pass
-		# to add the function for updating the load of ther servers
 
 
 if __name__ == "__main__":

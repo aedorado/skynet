@@ -1,6 +1,5 @@
 import os
 import sys
-import pymongo as pmn
 from recordtype import recordtype
 #would require a nltk library at this place
 
@@ -8,9 +7,11 @@ MyStruct = recordtype("MyStruct", "ip branches leaf parent words depth")
 
 #mongo still needed
 
+mast_ip = '172.20.52.8'
+
 class Trie :
 	def __init__(self) :
-		self.trie_root = MyStruct(ip='127.0.0.1', branches={}, leaf=False, parent = "",  words=[], depth = 0)
+		self.trie_root = MyStruct(ip=mast_ip, branches={}, leaf=False, parent = "",  words=[], depth = 0)
 		'''
 		Every time a init occurs we will...
 		retrieve the words from a pymonga database and ...
@@ -52,7 +53,7 @@ class Trie :
 			else :
 			#	print " --> not ok"
 				last_pointer = temp_pointer_root  #parent
-				temp_pointer_root =  MyStruct(ip='127.0.0.1', branches={}, leaf=False, parent = last_pointer, words=[], depth = 0)
+				temp_pointer_root =  MyStruct(ip='172.26.34.190', branches={}, leaf=False, parent = last_pointer, words=[], depth = 0)
 				last_pointer.branches.update({char : temp_pointer_root}) # updating child pointer of parent
 
 			temp_pointer_root.words += [self.curr_word.lower()]
@@ -204,8 +205,8 @@ class Trie :
 		return split_filename_result
 
 
-def main() :
-	'''argv = sys.argv
+'''def main() :
+	argv = sys.argv
 	file = argv[1]
 
 	print "testng"
@@ -230,13 +231,14 @@ def main() :
 	print "Searching : deep : ",
 	result = t_obj.search_get_json("deep")
 	print result
-'''
+	
 	t_obj = Trie()
-	t_obj.insert("Kritika.py<id>3434")
-	t_obj.insert("Kritka.py<id>3434")
-	t_obj.insert("Kritikas.py<id>3434")
-	t_obj.insert("Kritikkka.py<id>3434")
-	t_obj.search_get_json("Kriti.py")
+	t_obj.insert("swarnima<id>3434")
+	t_obj.insert("swarn.py<id>3434")
+	t_obj.insert("swarni.py<id>3434")
+	t_obj.insert("swart.py<id>3434")
+	t_obj.search_get_json("swar.py")
 
 if __name__ == "__main__" :
 	main()
+'''

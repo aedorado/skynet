@@ -17,6 +17,10 @@ from random import randint
 
 BUFFER = 4096
 
+persist_port = 9996        # set port where persistence is listening
+persist_ip =  '172.20.52.8'             # set ip of persistence
+
+
 def slave_thread(bundle):
 	global BUFFER
 	conn = bundle[0]
@@ -200,7 +204,7 @@ class Master :
 			finally :
 				break
 
-		# just to show to bibhas sir-----
+		# checking ^^^^
 		ip_ob = IP.IP()
 		my_ip = ip_ob.get_my_ip()
 		self.ip = my_ip
@@ -208,12 +212,12 @@ class Master :
 
 
 		# variable for initial logic .. 
-		# master sends own ip as it is also server
+		# master sends own ip 
 		print "MY MASTER IP ::::" + self.ip
 		self.last_ip = self.ip
 		self.HOST = self.ip
 
-		print "connecting to persistence in master"
+		#print "connecting to persistence in master"
 		self.register_to_persistence()
 
 		self.CONNECTION = {self.ip:1}   # this has also to be implemented in a database
@@ -239,11 +243,11 @@ class Master :
 		#this file should be implemented using a database ...
 		#since the server creating a master is in actually a master
 		#so it must update the file .. i.e the database about its existence
-		fHandle = open('master_stub.txt', 'w')
-		data = fHandle.write(self.ip + ',' + str(self.PORT))
-		print "hyy ",data
+		#fHandle = open('master_stub.txt', 'w')
+		#data = fHandle.write(self.ip + ',' + str(self.PORT))
+		#print "hyy ",data
 		#data = fHandle.write('0')
-		fHandle.close()
+		#fHandle.close()
 
 		print "yes.. bind.. retuen"
 		
@@ -251,21 +255,20 @@ class Master :
 			Thread(target=self.bind_and_serve, args=()).start()
 		except Exception, errtxt:
 			print errtxt
-
+		
 		#start_new_thread(self.bind_and_serve, ())
 
 	def register_to_persistence(self):
 		s = socket.socket()             # Create a socket object
 
-		# just to show to bibhas sir-----
-		ip_ob = IP.IP()
-		my_ip = ip_ob.get_my_ip()
-		host = my_ip
+		#ip_ob = IP.IP()
+		#my_ip = ip_ob.get_my_ip()
+		host = persist_ip
 		#---------------------------------
 
 		#host = '172.26.35.147'
 		#host = '172.17.23.17'
-		port = 9978                 # Reserve a port for your service.
+		port = persist_port                 # Reserve a port for your service.
 
 		s.connect((host, port))
 
